@@ -3,21 +3,25 @@
 //! A simple consensus engine for block production and finalization
 //!
 
-use std::collections::HashMap;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
+use std::{collections::HashMap, marker::PhantomData};
 
 use codec::{Decode, Encode};
 use derive_more::{AsRef, From, Into};
 use log::{debug, info, warn};
 
 use sp_api::{ProvideRuntimeApi, TransactionFor};
+use sp_application_crypto::RuntimePublic;
 use sp_consensus::{
-    import_queue::BasicQueue, BlockImport, BlockImportParams, BlockOrigin, Environment,
-    ForkChoiceStrategy, Proposal, Proposer, RecordProof, SelectChain, SyncOracle,
+    self,
+    import_queue::{BasicQueue, CacheKeyId, Verifier},
+    BlockCheckParams, BlockImport, BlockImportParams, BlockOrigin, Environment, ForkChoiceStrategy,
+    ImportResult, Proposal, Proposer, RecordProof, SelectChain, SyncOracle,
 };
 use sp_core::{sr25519, Pair};
+
 use sp_runtime::{
     generic::DigestItem,
     traits::{Block as BlockT, Header},
@@ -44,12 +48,99 @@ pub struct FinalityAuthorityPair(sr25519::Pair);
 struct Justification(sr25519::Signature);
 
 /// Seal is basically a claim of origin
-#[derive(AsRef, Debug, Encode, From)]
+#[derive(AsRef, Decode, Encode, From)]
 struct Seal(sr25519::Signature);
 
 impl<Block> From<Seal> for DigestItem<Block> {
     fn from(seal: Seal) -> Self {
         DigestItem::Seal(SIMPLEX_ENGINE_ID, seal.encode())
+    }
+}
+
+struct SimplexVerifier<B> {
+    authority: BlockAuthority,
+    _phantom: PhantomData<B>,
+}
+
+impl<B> SimplexVerifier<B>
+where
+    B: BlockT,
+{
+    fn check_header(&self, header: &mut B::Header) -> Result<Seal, String> {
+        let seal = match header.digest_mut().pop() {
+            Some(DigestItem::Seal(id, seal)) => {
+                if id == SIMPLEX_ENGINE_ID {
+                    Seal::decode(&mut &seal[..])
+                        .map_err(|_| "Header with invalid seal".to_string())?
+                } else {
+                    return Err("Header seal wrong engine id".into());
+                }
+            }
+            _ => return Err("Unsealed header".into()),
+        };
+
+        let pre_hash = header.hash();
+
+        if !self.authority.as_ref().verify(&pre_hash, seal.as_ref()) {
+            return Err("Invalid seal signature".into());
+        }
+
+        Ok(seal)
+    }
+}
+
+impl<B> Verifier<B> for SimplexVerifier<B>
+where
+    B: BlockT,
+{
+    fn verify(
+        &mut self,
+        origin: BlockOrigin,
+        mut header: B::Header,
+        justification: Option<sp_runtime::Justification>,
+        body: Option<Vec<B::Extrinsic>>,
+    ) -> Result<(BlockImportParams<B, ()>, Option<Vec<(CacheKeyId, Vec<u8>)>>), String> {
+        let hash = header.hash();
+        let seal = self.check_header(&mut header)?;
+
+        let mut params = BlockImportParams::new(origin, header);
+        params.body = body;
+        params.post_digests.push(seal.into());
+        params.post_hash = Some(hash);
+        params.justification = justification;
+        params.finalized = false;
+        params.fork_choice = Some(ForkChoiceStrategy::LongestChain);
+
+        Ok((params, None))
+    }
+}
+
+struct SimplexBlockImport<I, C> {
+    import: I,
+    _finality_authority: FinalityAuthority,
+    _phantom: PhantomData<C>,
+}
+
+impl<B, I, C> BlockImport<B> for SimplexBlockImport<I, C>
+where
+    B: BlockT,
+    C: ProvideRuntimeApi<B>,
+    I: BlockImport<B, Transaction = TransactionFor<C, B>>,
+    I::Error: Into<sp_consensus::Error>,
+{
+    type Error = sp_consensus::Error;
+    type Transaction = TransactionFor<C, B>;
+
+    fn check_block(&mut self, block: BlockCheckParams<B>) -> Result<ImportResult, Self::Error> {
+        self.import.check_block(block).map_err(Into::into)
+    }
+
+    fn import_block(
+        &mut self,
+        block: BlockImportParams<B, Self::Transaction>,
+        cache: HashMap<CacheKeyId, Vec<u8>>,
+    ) -> Result<ImportResult, Self::Error> {
+        self.import.import_block(block, cache).map_err(Into::into)
     }
 }
 
@@ -98,7 +189,7 @@ pub fn start_simplex<B, C, SC, I, E, SO>(
 {
     const BLOCK_TIME_SECS: u64 = 10;
 
-    info!(target: "simplex", "🎭 start simplex block authoring");
+    info!(target: "simplex", "📘 start simplex block authoring");
 
     let mut propose_block = move || -> Result<Proposal<B, TransactionFor<C, B>>, String> {
         let best_header = select_chain
@@ -141,7 +232,7 @@ pub fn start_simplex<B, C, SC, I, E, SO>(
 
     let mut author_block = move || -> Result<(), String> {
         if sync_oracle.is_major_syncing() {
-            debug!(target: "singelton", "🔷 skip block proposal due to sync.");
+            debug!(target: "singelton", "📘 skip block proposal due to sync.");
         }
 
         let proposal = propose_block()?;
@@ -163,7 +254,7 @@ pub fn start_simplex<B, C, SC, I, E, SO>(
 
     thread::spawn(move || loop {
         if let Err(err) = author_block() {
-            warn!(target: "singelton", "🔷 failed to author block: {:?}", err);
+            warn!(target: "singelton", "📘 failed to author block: {:?}", err);
         }
 
         thread::sleep(Duration::from_secs(BLOCK_TIME_SECS));

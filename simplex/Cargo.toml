@@ -12,6 +12,7 @@ log = "0.4"
 codec = { package = "parity-scale-codec", version = "1.3.6", features = ["derive"] }
 
 sp-api = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sp-application-crypto = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
 sp-consensus = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
 sp-core = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
 sp-runtime = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
