@@ -5,7 +5,7 @@ use crate::{chain_spec, service};
 
 impl SubstrateCli for Command {
     fn impl_name() -> String {
-        "Albert Node".into()
+        "Motor Node".into()
     }
 
     fn impl_version() -> String {
@@ -21,7 +21,7 @@ impl SubstrateCli for Command {
     }
 
     fn support_url() -> String {
-        "Albert is not very supportive".into()
+        "Motor is not very supportive".into()
     }
 
     fn copyright_start_year() -> i32 {
@@ -33,7 +33,7 @@ impl SubstrateCli for Command {
     }
 
     fn native_runtime_version(_: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
-        &albert_runtime::VERSION
+        &motor_runtime::VERSION
     }
 }
 

@@ -1,3 +1,4 @@
-# albert
+# motor
 
-A Substrate node template for experimental and development purposes only.
+Playground for Substrate block authoring and finalization, i.e. consensus.
+

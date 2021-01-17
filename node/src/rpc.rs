@@ -7,7 +7,7 @@ use sp_transaction_pool::TransactionPool;
 
 pub use sc_rpc_api::DenyUnsafe;
 
-use albert_runtime::{opaque::Block, AccountId, Balance, Index};
+use motor_runtime::{opaque::Block, AccountId, Balance, Index};
 
 /// Full client dependencies
 pub struct FullDeps<C, P> {
