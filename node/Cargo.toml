@@ -1,0 +1,64 @@
+[package]
+name = "albert"
+version = "0.0.1"
+authors = ["adoerr"]
+description = "A Substrate node for experimental purposes only!"
+edition = "2018"
+license = "Unlicense"
+build = "build.rs"
+
+[[bin]]
+name = "albert"
+
+[dependencies]
+structopt = "0.3"
+
+sc-basic-authorship = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sc-cli = { git = "https://github.com/adoerr/substrate.git", branch = "master", features = ["wasmtime"] }
+sc-client-api = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sc-consensus = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sc-consensus-aura = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sc-executor = { git = "https://github.com/adoerr/substrate.git", branch = "master", features = ["wasmtime"] }
+sc-finality-grandpa = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sc-keystore = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sc-rpc = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sc-rpc-api = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sc-service = { git = "https://github.com/adoerr/substrate.git", branch = "master", features = ["wasmtime"] }
+sc-transaction-pool = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+
+sp-api = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sp-block-builder = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sp-blockchain = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sp-consensus = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sp-consensus-aura = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sp-core = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sp-finality-grandpa = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sp-inherents = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sp-keyring = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sp-runtime = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sp-timestamp = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sp-transaction-pool = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+
+substrate-frame-rpc-system = { git = "https://github.com/adoerr/substrate.git", branch = "master" } 
+pallet-transaction-payment-rpc = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+
+jsonrpc-core = "15.1.0"
+
+# Dependencies for runtime benchmarking
+frame-benchmarking = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+frame-benchmarking-cli = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+
+albert-runtime = { path = "../runtime" }
+
+#
+# Add your pallet here
+#
+
+[build-dependencies]
+build-script-utils = { package = "substrate-build-script-utils", version = "2.0" }
+
+[features]
+default = []
+runtime-benchmarks = [
+	"albert-runtime/runtime-benchmarks",
+]
