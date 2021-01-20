@@ -7,6 +7,8 @@ use sp_consensus::import_queue::BasicQueue;
 
 use motor_runtime::{self, opaque::Block, RuntimeApi};
 
+use simplex::SimplexConfig;
+
 pub use sc_executor::NativeExecutor;
 
 native_executor_instance!(
@@ -46,7 +48,7 @@ pub fn new_partial(config: &Configuration) -> Result<ServiceComponents, ServiceE
 
     let select_chain = sc_consensus::LongestChain::new(backend.clone());
 
-    let config = simplex::Config {
+    let config = SimplexConfig {
         block_authority: sp_keyring::AccountKeyring::Alice.public().into(),
         finality_authority: sp_keyring::AccountKeyring::Bob.public().into(),
     };

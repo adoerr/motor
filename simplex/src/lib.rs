@@ -15,50 +15,50 @@ use log::{debug, info, warn};
 use sp_api::{ProvideRuntimeApi, TransactionFor};
 use sp_application_crypto::RuntimePublic;
 use sp_consensus::{
-    self,
     import_queue::{BasicQueue, CacheKeyId, Verifier},
-    BlockCheckParams, BlockImport, BlockImportParams, BlockOrigin, Environment, ForkChoiceStrategy,
-    ImportResult, Proposal, Proposer, RecordProof, SelectChain, SyncOracle,
+    BlockCheckParams, BlockImport, BlockImportParams, BlockOrigin, Environment,
+    Error as ConsensusError, ForkChoiceStrategy, ImportResult, Proposal, Proposer, RecordProof,
+    SelectChain, SyncOracle,
 };
 use sp_core::{sr25519, Pair};
 
 use sp_runtime::{
     generic::DigestItem,
     traits::{Block as BlockT, Header},
-    ConsensusEngineId,
+    ConsensusEngineId, Justification,
 };
 
 pub const SIMPLEX_ENGINE_ID: ConsensusEngineId = *b"SPLX";
 pub const SIMPLEX_PROTOCOL_NAME: &[u8] = b"/consensus/simplex/1";
 
 #[derive(AsRef, Clone, From, Into)]
-pub struct BlockAuthority(sr25519::Public);
+pub struct SimplexBlockAuthority(sr25519::Public);
 
 #[derive(AsRef, From, Into)]
-pub struct BlockAuthorityPair(sr25519::Pair);
+pub struct SimplexBlockAuthorityPair(sr25519::Pair);
 
 #[derive(AsRef, Clone, From, Into)]
-pub struct FinalityAuthority(sr25519::Public);
+pub struct SimplexFinalityAuthority(sr25519::Public);
 
 #[derive(AsRef, From, Into)]
-pub struct FinalityAuthorityPair(sr25519::Pair);
+pub struct SimplexFinalityAuthorityPair(sr25519::Pair);
 
 /// Justification is basically a finality proof
 #[derive(AsRef, Decode, Encode, From)]
-struct Justification(sr25519::Signature);
+struct SimplexJustification(sr25519::Signature);
 
 /// Seal is basically a claim of origin
 #[derive(AsRef, Decode, Encode, From)]
-struct Seal(sr25519::Signature);
+struct SimplexSeal(sr25519::Signature);
 
-impl<Block> From<Seal> for DigestItem<Block> {
-    fn from(seal: Seal) -> Self {
+impl<Block> From<SimplexSeal> for DigestItem<Block> {
+    fn from(seal: SimplexSeal) -> Self {
         DigestItem::Seal(SIMPLEX_ENGINE_ID, seal.encode())
     }
 }
 
 struct SimplexVerifier<B> {
-    authority: BlockAuthority,
+    authority: SimplexBlockAuthority,
     _phantom: PhantomData<B>,
 }
 
@@ -66,11 +66,11 @@ impl<B> SimplexVerifier<B>
 where
     B: BlockT,
 {
-    fn check_header(&self, header: &mut B::Header) -> Result<Seal, String> {
+    fn check_header(&self, header: &mut B::Header) -> Result<SimplexSeal, String> {
         let seal = match header.digest_mut().pop() {
             Some(DigestItem::Seal(id, seal)) => {
                 if id == SIMPLEX_ENGINE_ID {
-                    Seal::decode(&mut &seal[..])
+                    SimplexSeal::decode(&mut &seal[..])
                         .map_err(|_| "Header with invalid seal".to_string())?
                 } else {
                     return Err("Header seal wrong engine id".into());
@@ -97,7 +97,7 @@ where
         &mut self,
         origin: BlockOrigin,
         mut header: B::Header,
-        justification: Option<sp_runtime::Justification>,
+        justification: Option<Justification>,
         body: Option<Vec<B::Extrinsic>>,
     ) -> Result<(BlockImportParams<B, ()>, Option<Vec<(CacheKeyId, Vec<u8>)>>), String> {
         let hash = header.hash();
@@ -117,7 +117,7 @@ where
 
 struct SimplexBlockImport<I, C> {
     import: I,
-    _finality_authority: FinalityAuthority,
+    finality_authority: SimplexFinalityAuthority,
     _phantom: PhantomData<C>,
 }
 
@@ -126,9 +126,9 @@ where
     B: BlockT,
     C: ProvideRuntimeApi<B>,
     I: BlockImport<B, Transaction = TransactionFor<C, B>>,
-    I::Error: Into<sp_consensus::Error>,
+    I::Error: Into<ConsensusError>,
 {
-    type Error = sp_consensus::Error;
+    type Error = ConsensusError;
     type Transaction = TransactionFor<C, B>;
 
     fn check_block(&mut self, block: BlockCheckParams<B>) -> Result<ImportResult, Self::Error> {
@@ -137,34 +137,68 @@ where
 
     fn import_block(
         &mut self,
-        block: BlockImportParams<B, Self::Transaction>,
+        mut block: BlockImportParams<B, Self::Transaction>,
         cache: HashMap<CacheKeyId, Vec<u8>>,
     ) -> Result<ImportResult, Self::Error> {
+        let justification = block
+            .justification
+            .take()
+            .and_then(|j| SimplexJustification::decode(&mut &j[..]).ok());
+
+        if let Some(justification) = justification {
+            let hash = block
+                .post_hash
+                .as_ref()
+                .expect("header has a seal; must have a post hash; qed");
+
+            if self
+                .finality_authority
+                .as_ref()
+                .verify(hash, justification.as_ref())
+            {
+                block.justification = Some(justification.encode());
+                block.finalized = true;
+            } else {
+                warn!(target: "simplex", "📘 Invalid justification provided with block: {:?}", hash)
+            }
+        }
+
         self.import.import_block(block, cache).map_err(Into::into)
     }
 }
 
 #[derive(Clone)]
-pub struct Config {
-    pub block_authority: sr25519::Public,
-    pub finality_authority: sr25519::Public,
+pub struct SimplexConfig {
+    pub block_authority: SimplexBlockAuthority,
+    pub finality_authority: SimplexFinalityAuthority,
 }
 
-pub type ImportQueue<Block, Client> = BasicQueue<Block, TransactionFor<Client, Block>>;
+pub type SimplexImportQueue<Block, Client> = BasicQueue<Block, TransactionFor<Client, Block>>;
 
 pub fn import_queue<B, I, C>(
-    _config: Config,
-    _import: I,
+    config: SimplexConfig,
+    import: I,
     _client: Arc<C>,
-    _spawner: &dyn sp_core::traits::SpawnNamed,
-) -> ImportQueue<B, C>
+    spawner: &impl sp_core::traits::SpawnNamed,
+) -> SimplexImportQueue<B, C>
 where
     B: BlockT,
     I: BlockImport<B, Transaction = TransactionFor<C, B>> + Send + Sync + 'static,
     I::Error: Into<sp_consensus::Error>,
     C: ProvideRuntimeApi<B> + Send + Sync + 'static,
 {
-    unimplemented!()
+    let block_import = Box::new(SimplexBlockImport {
+        import,
+        finality_authority: config.finality_authority,
+        _phantom: PhantomData::<C>,
+    });
+
+    let verifier = SimplexVerifier {
+        authority: config.block_authority,
+        _phantom: PhantomData,
+    };
+
+    BasicQueue::new(verifier, block_import, None, spawner, None)
 }
 
 /// Start `simplex` block authoring and import.
@@ -175,7 +209,7 @@ pub fn start_simplex<B, C, SC, I, E, SO>(
     mut import: I,
     mut env: E,
     mut sync_oracle: SO,
-    authority_key: BlockAuthorityPair,
+    authority_key: SimplexBlockAuthorityPair,
 ) where
     B: BlockT,
     C: ProvideRuntimeApi<B> + Send + Sync + 'static,
