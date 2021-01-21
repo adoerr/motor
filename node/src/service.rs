@@ -32,7 +32,7 @@ type ServiceComponents = sc_service::PartialComponents<
 
 pub fn new_partial(config: &Configuration) -> Result<ServiceComponents, ServiceError> {
     // create full node initial parts
-    let (client, backend, keystore_container, task_manager) =
+    let (client, backend, keystore_container, task_manager, ..) =
         sc_service::new_full_parts::<Block, RuntimeApi, Executor>(&config)?;
 
     let client = Arc::new(client);
@@ -108,7 +108,6 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
     }
 
     let role = config.role.clone();
-    let telemtry_connection_sinks = sc_service::TelemetryConnectionSinks::default();
 
     let rpc_extensions_builder = {
         let client = client.clone();
@@ -131,7 +130,7 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
         keystore: keystore_container.sync_keystore(),
         task_manager: &mut task_manager,
         transaction_pool: transaction_pool.clone(),
-        telemetry_connection_sinks: telemtry_connection_sinks.clone(),
+        telemetry_span: None,
         rpc_extensions_builder,
         on_demand: None,
         remote_blockchain: None,
