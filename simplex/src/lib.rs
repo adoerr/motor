@@ -12,6 +12,9 @@ use codec::{Decode, Encode};
 use derive_more::{AsRef, From, Into};
 use log::{debug, info, warn};
 
+use sc_client_api::{Backend, BlockchainEvents, Finalizer};
+use sc_network_gossip::{Network, GossipEngine};
+
 use sp_api::{ProvideRuntimeApi, TransactionFor};
 use sp_application_crypto::RuntimePublic;
 use sp_consensus::{
@@ -24,7 +27,7 @@ use sp_core::{sr25519, Pair};
 
 use sp_runtime::{
     generic::DigestItem,
-    traits::{Block as BlockT, Header},
+    traits::{Block as BlockT, Hash, Header},
     ConsensusEngineId, Justification,
 };
 
@@ -266,7 +269,7 @@ pub fn start_simplex<B, C, SC, I, E, SO>(
 
     let mut author_block = move || -> Result<(), String> {
         if sync_oracle.is_major_syncing() {
-            debug!(target: "singelton", "📘 skip block proposal due to sync.");
+            debug!(target: "simplex", "📘 skip block proposal due to sync.");
         }
 
         let proposal = propose_block()?;
@@ -288,9 +291,31 @@ pub fn start_simplex<B, C, SC, I, E, SO>(
 
     thread::spawn(move || loop {
         if let Err(err) = author_block() {
-            warn!(target: "singelton", "📘 failed to author block: {:?}", err);
+            warn!(target: "simplex", "📘 failed to author block: {:?}", err);
         }
 
         thread::sleep(Duration::from_secs(BLOCK_TIME_SECS));
     });
+}
+
+#[derive(Decode, Encode)]
+struct SimplexFinalityMessage<Hash> {
+    block_hash: Hash,
+    poof: SimplexJustification,
+}
+
+pub async fn start_simplex_finality_gadget<B, BE, C, N, SO>(
+    _config: SimplexConfig,
+    _client: Arc<C>,
+    _network: N,
+    mut _sync_oracle: SO,
+    _authority_key: Option<SimplexFinalityAuthorityPair>,
+) where
+    B: BlockT,
+    BE: Backend<B>,
+    C: BlockchainEvents<B> + Finalizer<B, BE> + Send + Sync,
+    N: Network<B> + Clone + Send + 'static,
+    SO: SyncOracle + Send + 'static,
+{
+
 }
