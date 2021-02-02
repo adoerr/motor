@@ -8,6 +8,7 @@ publish = false
 derive_more = "0.99"
 futures = "0.3"
 log = "0.4"
+parking_lot = "0.11"
 
 codec = { package = "parity-scale-codec", version = "2.0.0", features = ["derive"] }
 
@@ -18,4 +19,5 @@ sp-core = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
 sp-runtime = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
 
 sc-client-api = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sc-network = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
 sc-network-gossip = { git = "https://github.com/adoerr/substrate.git", branch = "master" }

@@ -10,10 +10,13 @@ use std::{collections::HashMap, marker::PhantomData};
 
 use codec::{Decode, Encode};
 use derive_more::{AsRef, From, Into};
+use futures::{future, FutureExt, StreamExt};
 use log::{debug, info, warn};
+use parking_lot::Mutex;
 
 use sc_client_api::{Backend, BlockchainEvents, Finalizer};
-use sc_network_gossip::{Network, GossipEngine};
+use sc_network::PeerId;
+use sc_network_gossip::{GossipEngine, Network, ValidationResult, Validator, ValidatorContext};
 
 use sp_api::{ProvideRuntimeApi, TransactionFor};
 use sp_application_crypto::RuntimePublic;
@@ -32,7 +35,7 @@ use sp_runtime::{
 };
 
 pub const SIMPLEX_ENGINE_ID: ConsensusEngineId = *b"SPLX";
-pub const SIMPLEX_PROTOCOL_NAME: &[u8] = b"/consensus/simplex/1";
+pub const SIMPLEX_PROTOCOL_NAME: &'static str = "/consensus/simplex/1";
 
 #[derive(AsRef, Clone, From, Into)]
 pub struct SimplexBlockAuthority(sr25519::Public);
@@ -298,6 +301,24 @@ pub fn start_simplex<B, C, SC, I, E, SO>(
     });
 }
 
+struct AllowAll<Hash> {
+    topic: Hash,
+}
+
+impl<B> Validator<B> for AllowAll<B::Hash>
+where
+    B: BlockT,
+{
+    fn validate(
+        &self,
+        _context: &mut dyn ValidatorContext<B>,
+        _sender: &PeerId,
+        _data: &[u8],
+    ) -> ValidationResult<B::Hash> {
+        ValidationResult::ProcessAndKeep(self.topic)
+    }
+}
+
 #[derive(Decode, Encode)]
 struct SimplexFinalityMessage<Hash> {
     block_hash: Hash,
@@ -306,9 +327,9 @@ struct SimplexFinalityMessage<Hash> {
 
 pub async fn start_simplex_finality_gadget<B, BE, C, N, SO>(
     _config: SimplexConfig,
-    _client: Arc<C>,
-    _network: N,
-    mut _sync_oracle: SO,
+    client: Arc<C>,
+    network: N,
+    mut sync_oracle: SO,
     _authority_key: Option<SimplexFinalityAuthorityPair>,
 ) where
     B: BlockT,
@@ -317,5 +338,41 @@ pub async fn start_simplex_finality_gadget<B, BE, C, N, SO>(
     N: Network<B> + Clone + Send + 'static,
     SO: SyncOracle + Send + 'static,
 {
+    let topic = <<B::Header as Header>::Hashing as Hash>::hash("simplex".as_bytes());
 
+    let gossip_engine = Arc::new(Mutex::new(GossipEngine::new(
+        network,
+        SIMPLEX_PROTOCOL_NAME,
+        Arc::new(AllowAll { topic }),
+        None,
+    )));
+
+    let mut listener = {
+        let client = client.clone();
+
+        gossip_engine
+            .lock()
+            .messages_for(topic)
+            .for_each(move |notification| {
+                if sync_oracle.is_major_syncing() {
+                    debug!(target: "simplex", "📘 Ignoring finality notification due to ongoing sync.")
+                }
+
+                let message: SimplexFinalityMessage<B:Hash> = match Decode::decode(&mut &notification.message[..],) {
+                    Ok(n) => n,
+                    Err(err) => {
+                        warn!(target: "simplex", "📘 Failed to decode gossip message: {:?}", err);
+                        return future::ready(());
+                    }
+                };
+
+                future::ready(())
+            })
+    };
+
+    let mut gossip_engine = future::poll_fn(move |cx| gossip_engine.lock().poll_unpin(cx)).fuse();
+
+    futures::select! {
+        () = gossip_engine => {},
+    }
 }
