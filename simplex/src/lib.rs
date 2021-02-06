@@ -18,7 +18,7 @@ use sc_client_api::{Backend, BlockchainEvents, Finalizer};
 use sc_network::PeerId;
 use sc_network_gossip::{GossipEngine, Network, ValidationResult, Validator, ValidatorContext};
 
-use sp_api::{ProvideRuntimeApi, TransactionFor};
+use sp_api::{ProvideRuntimeApi, TransactionFor, BlockId};
 use sp_application_crypto::RuntimePublic;
 use sp_consensus::{
     import_queue::{BasicQueue, CacheKeyId, Verifier},
@@ -322,11 +322,11 @@ where
 #[derive(Decode, Encode)]
 struct SimplexFinalityMessage<Hash> {
     block_hash: Hash,
-    poof: SimplexJustification,
+    proof: SimplexJustification,
 }
 
 pub async fn start_simplex_finality_gadget<B, BE, C, N, SO>(
-    _config: SimplexConfig,
+    config: SimplexConfig,
     client: Arc<C>,
     network: N,
     mut sync_oracle: SO,
@@ -365,6 +365,25 @@ pub async fn start_simplex_finality_gadget<B, BE, C, N, SO>(
                         return future::ready(());
                     }
                 };
+
+                if let Some(peer) = notification.sender {
+                    info!(target: "simplex", "📘 Got finality message from: {:?}", peer);   
+                }
+
+                if config.finality_authority
+                .as_ref()
+                .verify(&message.block_hash, message.proof.as_ref())
+                {
+                    if let Err(err) = client.finalize_block(
+                        BlockId::Hash(message.block_hash), 
+                        Some(message.proof.encode()),
+                        true,
+                    ) {
+                        warn!(target: "simplex", "📘 Failed finalizing block {:?}: {:?}", message.block_hash, err);
+                    }
+                } else {
+                    warn!(target: "simplex", "📘 Failed verifying finality proof");
+                }
 
                 future::ready(())
             })
