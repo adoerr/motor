@@ -358,7 +358,7 @@ pub async fn start_simplex_finality_gadget<B, BE, C, N, SO>(
                     debug!(target: "simplex", "📘 Ignoring finality notification due to ongoing sync.")
                 }
 
-                let message: SimplexFinalityMessage<B:Hash> = match Decode::decode(&mut &notification.message[..],) {
+                let message: SimplexFinalityMessage<B::Hash> = match Decode::decode(&mut &notification.message[..],) {
                     Ok(n) => n,
                     Err(err) => {
                         warn!(target: "simplex", "📘 Failed to decode gossip message: {:?}", err);
