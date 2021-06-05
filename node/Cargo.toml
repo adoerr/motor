@@ -46,7 +46,7 @@ motor-runtime = { path = "../runtime" }
 #
 # Add your pallet here
 #
-simplex = { path = "../simplex" }
+#simplex = { path = "../simplex" }
 
 [build-dependencies]
 build-script-utils = { package = "substrate-build-script-utils", version = "2.0" }

@@ -7,7 +7,7 @@ use sp_consensus::import_queue::BasicQueue;
 
 use motor_runtime::{self, opaque::Block, RuntimeApi};
 
-use simplex::SimplexConfig;
+//use simplex::SimplexConfig;
 
 pub use sc_executor::NativeExecutor;
 
@@ -25,7 +25,7 @@ type ServiceComponents = sc_service::PartialComponents<
     FullClient,
     FullBackend,
     FullSelectedChain,
-    BasicQueue<Block, TransactionFor<FullClient, Block>>,
+    sp_consensus::DefaultImportQueue<Block, FullClient>,
     sc_transaction_pool::FullPool<Block, FullClient>,
     (),
 >;
@@ -45,10 +45,8 @@ pub fn new_partial(config: &Configuration) -> Result<ServiceComponents, ServiceE
         client.clone(),
     );
 
-    let inherent_data_providers = sp_inherents::InherentDataProviders::new();
-
     let select_chain = sc_consensus::LongestChain::new(backend.clone());
-
+/* 
     let config = SimplexConfig {
         block_authority: sp_keyring::AccountKeyring::Alice.public().into(),
         finality_authority: sp_keyring::AccountKeyring::Bob.public().into(),
@@ -60,8 +58,8 @@ pub fn new_partial(config: &Configuration) -> Result<ServiceComponents, ServiceE
         client.clone(),
         &task_manager.spawn_handle(),
     );
-
-    Ok(PartialComponents {
+*/
+    Ok(ServiceComponents {
         client,
         backend,
         task_manager,
@@ -69,14 +67,13 @@ pub fn new_partial(config: &Configuration) -> Result<ServiceComponents, ServiceE
         keystore_container,
         select_chain,
         transaction_pool,
-        inherent_data_providers,
         other: (),
     })
 }
 
 /// Bootstrap services for a new full client
 pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
-    let PartialComponents {
+    let ServiceComponents {
         client,
         backend,
         mut task_manager,
@@ -84,10 +81,10 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
         keystore_container,
         select_chain,
         transaction_pool,
-        ..
+        ..,
     } = new_partial(&config)?;
 
-    let (network, network_status_sinks, system_rpc_tx, network_starter) =
+    let (network, system_rpc_tx, network_starter) =
         sc_service::build_network(sc_service::BuildNetworkParams {
             config: &config,
             client: client.clone(),
@@ -101,7 +98,6 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
     if config.offchain_worker.enabled {
         sc_service::build_offchain_workers(
             &config,
-            backend.clone(),
             task_manager.spawn_handle(),
             client.clone(),
             network.clone(),
@@ -135,9 +131,9 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
         on_demand: None,
         remote_blockchain: None,
         backend,
-        network_status_sinks,
         system_rpc_tx,
         config,
+        telemetry: None,
     })?;
 
     if role.is_authority() {
@@ -146,8 +142,9 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
             client.clone(),
             transaction_pool.clone(),
             None,
+            None,
         );
-
+/*
         simplex::start_simplex(
             client.clone(),
             select_chain,
@@ -156,6 +153,7 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
             network.clone(),
             sp_keyring::AccountKeyring::Alice.pair().into(),
         );
+*/        
     }
 
     network_starter.start_network();
