@@ -1,0 +1,10 @@
+[package]
+name = "falso"
+version = "0.0.1"
+authors = ["Andreas Doerr"]
+edition = "2018"
+
+[dependencies]
+sc-service = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+
+substrate-test-runtime-client = { git = "https://github.com/adoerr/substrate.git", branch = "master" }

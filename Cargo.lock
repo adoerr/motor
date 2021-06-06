@@ -1445,6 +1445,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4443176a9f2c162692bd3d352d745ef9413eec5782a80d8fd6f8a1ac692a07f7"
 
 [[package]]
+name = "falso"
+version = "0.0.1"
+dependencies = [
+ "sc-service",
+ "substrate-test-runtime-client",
+]
+
+[[package]]
 name = "fastrand"
 version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3779,6 +3787,43 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-authorship"
+version = "3.0.0"
+source = "git+https://github.com/adoerr/substrate.git?branch=master#37bb3ae7eb559afaf9c7dbf7fd99e08b282c8127"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "impl-trait-for-tuples",
+ "parity-scale-codec",
+ "sp-authorship",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-babe"
+version = "3.0.0"
+source = "git+https://github.com/adoerr/substrate.git?branch=master#37bb3ae7eb559afaf9c7dbf7fd99e08b282c8127"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "pallet-authorship",
+ "pallet-session",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "sp-application-crypto",
+ "sp-consensus-babe",
+ "sp-consensus-vrf",
+ "sp-io",
+ "sp-runtime",
+ "sp-session",
+ "sp-staking",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-balances"
 version = "3.0.0"
 source = "git+https://github.com/adoerr/substrate.git?branch=master#37bb3ae7eb559afaf9c7dbf7fd99e08b282c8127"
@@ -3807,6 +3852,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-session"
+version = "3.0.0"
+source = "git+https://github.com/adoerr/substrate.git?branch=master#37bb3ae7eb559afaf9c7dbf7fd99e08b282c8127"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "impl-trait-for-tuples",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-session",
+ "sp-staking",
+ "sp-std",
+ "sp-trie",
+]
+
+[[package]]
 name = "pallet-sudo"
 version = "3.0.0"
 source = "git+https://github.com/adoerr/substrate.git?branch=master#37bb3ae7eb559afaf9c7dbf7fd99e08b282c8127"
@@ -3817,6 +3881,23 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "sp-std",
+]
+
+[[package]]
+name = "pallet-timestamp"
+version = "3.0.0"
+source = "git+https://github.com/adoerr/substrate.git?branch=master#37bb3ae7eb559afaf9c7dbf7fd99e08b282c8127"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "impl-trait-for-tuples",
+ "log",
+ "parity-scale-codec",
+ "sp-inherents",
+ "sp-runtime",
+ "sp-std",
+ "sp-timestamp",
 ]
 
 [[package]]
@@ -6348,6 +6429,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "sp-consensus-aura"
+version = "0.9.0"
+source = "git+https://github.com/adoerr/substrate.git?branch=master#37bb3ae7eb559afaf9c7dbf7fd99e08b282c8127"
+dependencies = [
+ "async-trait",
+ "parity-scale-codec",
+ "sp-api",
+ "sp-application-crypto",
+ "sp-consensus",
+ "sp-consensus-slots",
+ "sp-inherents",
+ "sp-runtime",
+ "sp-std",
+ "sp-timestamp",
+]
+
+[[package]]
 name = "sp-consensus-babe"
 version = "0.9.0"
 source = "git+https://github.com/adoerr/substrate.git?branch=master#37bb3ae7eb559afaf9c7dbf7fd99e08b282c8127"
@@ -7008,6 +7106,97 @@ dependencies = [
  "log",
  "prometheus",
  "tokio 0.2.25",
+]
+
+[[package]]
+name = "substrate-test-client"
+version = "2.0.1"
+source = "git+https://github.com/adoerr/substrate.git?branch=master#37bb3ae7eb559afaf9c7dbf7fd99e08b282c8127"
+dependencies = [
+ "async-trait",
+ "futures 0.1.31",
+ "futures 0.3.15",
+ "hash-db",
+ "hex",
+ "parity-scale-codec",
+ "sc-client-api",
+ "sc-client-db",
+ "sc-consensus",
+ "sc-executor",
+ "sc-light",
+ "sc-offchain",
+ "sc-service",
+ "serde",
+ "serde_json",
+ "sp-blockchain",
+ "sp-consensus",
+ "sp-core",
+ "sp-keyring",
+ "sp-keystore",
+ "sp-runtime",
+ "sp-state-machine",
+]
+
+[[package]]
+name = "substrate-test-runtime"
+version = "2.0.0"
+source = "git+https://github.com/adoerr/substrate.git?branch=master#37bb3ae7eb559afaf9c7dbf7fd99e08b282c8127"
+dependencies = [
+ "cfg-if 1.0.0",
+ "frame-support",
+ "frame-system",
+ "frame-system-rpc-runtime-api",
+ "log",
+ "memory-db",
+ "pallet-babe",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "parity-util-mem",
+ "sc-service",
+ "serde",
+ "sp-api",
+ "sp-application-crypto",
+ "sp-block-builder",
+ "sp-consensus-aura",
+ "sp-consensus-babe",
+ "sp-core",
+ "sp-externalities",
+ "sp-finality-grandpa",
+ "sp-inherents",
+ "sp-io",
+ "sp-keyring",
+ "sp-offchain",
+ "sp-runtime",
+ "sp-runtime-interface",
+ "sp-session",
+ "sp-state-machine",
+ "sp-std",
+ "sp-transaction-pool",
+ "sp-trie",
+ "sp-version",
+ "substrate-wasm-builder",
+ "trie-db",
+]
+
+[[package]]
+name = "substrate-test-runtime-client"
+version = "2.0.0"
+source = "git+https://github.com/adoerr/substrate.git?branch=master#37bb3ae7eb559afaf9c7dbf7fd99e08b282c8127"
+dependencies = [
+ "futures 0.3.15",
+ "parity-scale-codec",
+ "sc-block-builder",
+ "sc-client-api",
+ "sc-consensus",
+ "sc-light",
+ "sc-service",
+ "sp-api",
+ "sp-blockchain",
+ "sp-consensus",
+ "sp-core",
+ "sp-runtime",
+ "substrate-test-client",
+ "substrate-test-runtime",
 ]
 
 [[package]]

@@ -9,7 +9,9 @@ Note that `motor` follows [Substrate](https://github.com/paritytech/substrate) `
 
 ## Engine Parts
 
-* [Simplex](./simplex) is a block authoring and finalization consensus engine based on André Silva's [Consensus Barcamp](https://github.com/andresilva/substrate-consensus-barcamp)
+* [Falso](./falso) is a mock client for testing purposes.
+
+* [Simplex](./simplex) is a minimal block authoring and finalization engine.
 
 
 
