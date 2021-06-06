@@ -33,7 +33,7 @@ impl SubstrateCli for Command {
     }
 
     fn native_runtime_version(_: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
-        &motor_runtime::VERSION
+        &simplex_runtime::VERSION
     }
 }
 

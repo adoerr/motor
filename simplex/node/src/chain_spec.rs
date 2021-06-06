@@ -1,7 +1,7 @@
 use sc_service::ChainType;
 use sp_keyring::AccountKeyring;
 
-use motor_runtime::{BalancesConfig, GenesisConfig, SudoConfig, SystemConfig, WASM_BINARY};
+use simplex_runtime::{BalancesConfig, GenesisConfig, SudoConfig, SystemConfig, WASM_BINARY};
 
 pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
 
@@ -44,15 +44,15 @@ fn genesis(wasm: &[u8]) -> GenesisConfig {
     ];
 
     GenesisConfig {
-        frame_system: Some(SystemConfig {
+        frame_system: SystemConfig {
             // store wasm runtime
             code: wasm.to_vec(),
             changes_trie_config: Default::default(),
-        }),
-        pallet_balances: Some(BalancesConfig {
+        },
+        pallet_balances: BalancesConfig {
             // initial account balances
             balances: accounts.iter().cloned().map(|acc| (acc, 1 << 60)).collect(),
-        }),
-        pallet_sudo: Some(SudoConfig { key: sudo_key }),
+        },
+        pallet_sudo: SudoConfig { key: sudo_key },
     }
 }

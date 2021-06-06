@@ -82,8 +82,8 @@ pub mod opaque {
 }
 
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-    spec_name: create_runtime_str!("motor-template"),
-    impl_name: create_runtime_str!("motor-node"),
+    spec_name: create_runtime_str!("simplex-template"),
+    impl_name: create_runtime_str!("simplex-node"),
     authoring_version: 1,
     spec_version: 1,
     impl_version: 1,
@@ -272,7 +272,7 @@ pub type Executive = frame_executive::Executive<
     Block,
     frame_system::ChainContext<Runtime>,
     Runtime,
-    AllModules,
+    AllPallets,
 >;
 
 impl_runtime_apis! {

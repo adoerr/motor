@@ -1,5 +1,5 @@
 [package]
-name = "motor-runtime"
+name = "simplex-runtime"
 version = "0.0.1"
 authors = ["adoerr"]
 edition = "2018"

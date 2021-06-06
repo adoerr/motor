@@ -1,5 +1,5 @@
 [package]
-name = "motor"
+name = "simplex"
 version = "0.0.1"
 authors = ["adoerr"]
 description = "A Substrate node for experimental purposes only!"
@@ -8,7 +8,7 @@ license = "Unlicense"
 build = "build.rs"
 
 [[bin]]
-name = "motor"
+name = "simplex"
 
 [dependencies]
 structopt = "0.3"
@@ -40,13 +40,8 @@ pallet-transaction-payment-rpc = { git = "https://github.com/adoerr/substrate.gi
 
 jsonrpc-core = "15.1.0"
 
-# Motor runtime
-motor-runtime = { path = "../runtime" }
-
-#
-# Add your pallet here
-#
-#simplex = { path = "../simplex" }
+# Simplex runtime
+simplex-runtime = { path = "../runtime" }
 
 [build-dependencies]
 build-script-utils = { package = "substrate-build-script-utils", version = "2.0" }

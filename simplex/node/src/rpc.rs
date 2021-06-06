@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::sync::Arc;
 
 use sp_api::ProvideRuntimeApi;
@@ -7,7 +9,7 @@ use sp_transaction_pool::TransactionPool;
 
 pub use sc_rpc_api::DenyUnsafe;
 
-use motor_runtime::{opaque::Block, AccountId, Balance, Index};
+use simplex_runtime::{opaque::Block, AccountId, Balance, Index};
 
 /// Full client dependencies
 pub struct FullDeps<C, P> {
@@ -47,7 +49,7 @@ where
     )));
 
     io.extend_with(TransactionPaymentApi::to_delegate(TransactionPayment::new(
-        client.clone(),
+        client,
     )));
 
     // Extend this RPC with a custom API by using the following syntax.
