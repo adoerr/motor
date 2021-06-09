@@ -1,3 +1,5 @@
+use sc_service::Arc;
+
 // Copyright (C) 2021 Andreas Doerr
 // SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
 
@@ -14,6 +16,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use substrate_test_runtime_client::{Backend, Client};
+use {
+    sc_service::client::Client,
+    substrate_test_runtime_client::{
+        runtime::{Block, RuntimeApi},
+        Backend, Executor,
+    },
+};
 
-pub type MockClient = Client<Backend>;
+pub trait MockNetwork {
+    
+}

@@ -9,7 +9,7 @@ Note that `motor` follows [Substrate](https://github.com/paritytech/substrate) `
 
 ## Engine Parts
 
-* [Falso](./falso) is a mock client for testing purposes.
+* [Falso](./falso) is a mock network for testing purposes.
 
 * [Simplex](./simplex) is a minimal block authoring and finalization engine.
 
