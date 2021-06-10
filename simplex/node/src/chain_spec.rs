@@ -44,15 +44,15 @@ fn genesis(wasm: &[u8]) -> GenesisConfig {
     ];
 
     GenesisConfig {
-        frame_system: SystemConfig {
+        system: SystemConfig {
             // store wasm runtime
             code: wasm.to_vec(),
             changes_trie_config: Default::default(),
         },
-        pallet_balances: BalancesConfig {
+        balances: BalancesConfig {
             // initial account balances
             balances: accounts.iter().cloned().map(|acc| (acc, 1 << 60)).collect(),
         },
-        pallet_sudo: SudoConfig { key: sudo_key },
+        sudo: SudoConfig { key: sudo_key },
     }
 }
