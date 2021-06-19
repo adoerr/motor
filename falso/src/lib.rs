@@ -14,11 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use std::sync::Arc;
-
 use {
     sc_network::config::ProtocolConfig,
-    sc_service::client::Client,
     sp_consensus::{
         block_import::BlockImport,
         import_queue::{BoxJustificationImport, Verifier},
@@ -27,20 +24,9 @@ use {
 
 use substrate_test_runtime_client::runtime::Block as MockBlock;
 
-/// Full client for test network
-pub type FullClient = Client<
-    substrate_test_runtime_client::Backend,
-    substrate_test_runtime_client::Executor,
-    MockBlock,
-    substrate_test_runtime_client::runtime::RuntimeApi,
->;
+mod client;
 
-/// Mock network client
-#[derive(Clone)]
-pub struct MockClient {
-    client: Arc<FullClient>,
-    backend: Arc<substrate_test_runtime_client::Backend>,
-}
+pub use client::MockClient;
 
 pub trait MockNetwork {
     type Verifier: Verifier<MockBlock> + 'static;
