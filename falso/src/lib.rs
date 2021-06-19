@@ -1,5 +1,3 @@
-use sc_service::Arc;
-
 // Copyright (C) 2021 Andreas Doerr
 // SPDX-License-Identifier: GPL-3.0-or-later WITH Classpath-exception-2.0
 
@@ -17,13 +15,46 @@ use sc_service::Arc;
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 use {
+    sc_network::config::ProtocolConfig,
     sc_service::client::Client,
-    substrate_test_runtime_client::{
-        runtime::{Block, RuntimeApi},
-        Backend, Executor,
-    },
+    sp_consensus::{block_import::BlockImport, import_queue::Verifier},
+    std::sync::Arc,
+    substrate_test_runtime_client::runtime::Block as MockBlock,
 };
 
+/// Full client for test network
+pub type FullClient = Client<
+    substrate_test_runtime_client::Backend,
+    substrate_test_runtime_client::Executor,
+    MockBlock,
+    substrate_test_runtime_client::runtime::RuntimeApi,
+>;
+
+/// Mock network client
+#[derive(Clone)]
+pub struct MockClient(Arc<FullClient>, Arc<substrate_test_runtime_client::Backend>);
+
 pub trait MockNetwork {
-    
+    type Verifier: Verifier<MockBlock> + 'static;
+
+    type BlockImport: BlockImport<MockBlock, Error = sp_consensus::Error>
+        + Clone
+        + Send
+        + Sync
+        + 'static;
+
+    type PeerData: Default;
+
+    /// Implement this method to return a protocol configuration customized for
+    /// your needs.
+    fn config(config: &ProtocolConfig) -> Self;
+
+    /// Implement this method to return a block import verifier customized for
+    /// your needs.
+    fn verifier(
+        &self,
+        client: MockClient,
+        config: &ProtocolConfig,
+        data: &Self::PeerData,
+    ) -> Self::Verifier;
 }

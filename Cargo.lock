@@ -1440,7 +1440,11 @@ name = "falso"
 version = "0.0.1"
 dependencies = [
  "sc-client-db",
+ "sc-network",
  "sc-service",
+ "sp-consensus",
+ "sp-runtime",
+ "substrate-test-client",
  "substrate-test-runtime-client",
 ]
 
