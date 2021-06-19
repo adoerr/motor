@@ -179,6 +179,8 @@ impl frame_system::Config for Runtime {
     type OnSetCode = ();
 }
 
+impl pallet_randomness_collective_flip::Config for Runtime {}
+
 parameter_types! {
     /// Minimal increment between sequential blocks
     pub const MinimumPeriod: u64 = SLOT_DURATION / 2;
@@ -228,7 +230,7 @@ construct_runtime!(
     {
         System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
         Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-        RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Pallet, Call, Storage},
+        RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Pallet, Storage},
         Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>},
         TransactionPayment: pallet_transaction_payment::{Pallet, Storage},
     }
