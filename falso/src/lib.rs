@@ -14,13 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use std::sync::Arc;
+
 use {
     sc_network::config::ProtocolConfig,
     sc_service::client::Client,
-    sp_consensus::{block_import::BlockImport, import_queue::Verifier},
-    std::sync::Arc,
-    substrate_test_runtime_client::runtime::Block as MockBlock,
+    sp_consensus::{
+        block_import::BlockImport,
+        import_queue::{BoxJustificationImport, Verifier},
+    },
 };
+
+use substrate_test_runtime_client::runtime::Block as MockBlock;
 
 /// Full client for test network
 pub type FullClient = Client<
@@ -32,7 +37,10 @@ pub type FullClient = Client<
 
 /// Mock network client
 #[derive(Clone)]
-pub struct MockClient(Arc<FullClient>, Arc<substrate_test_runtime_client::Backend>);
+pub struct MockClient {
+    client: Arc<FullClient>,
+    backend: Arc<substrate_test_runtime_client::Backend>,
+}
 
 pub trait MockNetwork {
     type Verifier: Verifier<MockBlock> + 'static;
@@ -45,16 +53,24 @@ pub trait MockNetwork {
 
     type PeerData: Default;
 
-    /// Implement this method to return a protocol configuration customized for
-    /// your needs.
-    fn config(config: &ProtocolConfig) -> Self;
+    /// Implement this method to return a mock network customized for your needs.
+    fn new() -> Self;
 
-    /// Implement this method to return a block import verifier customized for
-    /// your needs.
+    /// Implement this method to return a block import verifier customized for your needs.
     fn verifier(
         &self,
         client: MockClient,
         config: &ProtocolConfig,
         data: &Self::PeerData,
     ) -> Self::Verifier;
+
+    /// Implement this method to return a block import implementation customized for your needs.
+    fn block_import(
+        &self,
+        client: MockClient,
+    ) -> (
+        Self::BlockImport,
+        Option<BoxJustificationImport<MockBlock>>,
+        Self::PeerData,
+    );
 }
