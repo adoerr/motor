@@ -14,11 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+#![allow(dead_code)]
+
+use sp_blockchain::well_known_cache_keys;
 use sp_consensus::{
     import_queue::{CacheKeyId, Verifier},
     BlockImportParams, BlockOrigin, ForkChoiceStrategy,
 };
-use sp_runtime::{traits::Block, Justifications};
+use sp_runtime::{
+    generic::OpaqueDigestItemId,
+    traits::{Block, Header},
+    Justifications,
+};
 
 /// A Verifier that accepts all justifications and passes them on for import.
 ///
@@ -57,6 +64,17 @@ where
         justifications: Option<Justifications>,
         body: Option<Vec<B::Extrinsic>>,
     ) -> Result<(BlockImportParams<B, ()>, Option<Vec<(CacheKeyId, Vec<u8>)>>), String> {
-        todo!()
+        let maybe_keys = header
+            .digest()
+            .log(|l| l.try_as_raw(OpaqueDigestItemId::Consensus(b"smpl")))
+            .map(|l| vec![(well_known_cache_keys::AUTHORITIES, l.to_vec())]);
+
+        let mut import = BlockImportParams::new(origin, header);
+        import.body = body;
+        import.finalized = self.finalized;
+        import.justifications = justifications;
+        import.fork_choice = Some(self.fork_choice);
+
+        Ok((import, maybe_keys))
     }
 }
