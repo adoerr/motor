@@ -16,14 +16,12 @@
 
 use std::{collections::HashMap, sync::Arc};
 
-use {
-    sc_client_api::backend::Finalizer,
-    sc_service::client::Client,
-    sp_consensus::{
-        import_queue::CacheKeyId, BlockCheckParams, BlockImport, BlockImportParams, ImportResult,
-    },
-    sp_runtime::{generic::BlockId, Justification},
+use sc_client_api::backend::Finalizer;
+use sc_service::client::Client;
+use sp_consensus::{
+    import_queue::CacheKeyId, BlockCheckParams, BlockImport, BlockImportParams, ImportResult,
 };
+use sp_runtime::{generic::BlockId, Justification};
 
 use substrate_test_runtime_client::runtime::Block as MockBlock;
 

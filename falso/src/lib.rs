@@ -14,17 +14,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use {
-    sc_network::config::ProtocolConfig,
-    sp_consensus::{
-        block_import::BlockImport,
-        import_queue::{BoxJustificationImport, Verifier},
-    },
+use sc_network::config::ProtocolConfig;
+use sp_consensus::{
+    block_import::BlockImport,
+    import_queue::{BoxJustificationImport, Verifier},
 };
 
 use substrate_test_runtime_client::runtime::Block as MockBlock;
 
 mod client;
+mod import;
 
 pub use client::MockClient;
 
