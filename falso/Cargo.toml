@@ -18,3 +18,5 @@ substrate-test-client = { git = "https://github.com/adoerr/substrate.git", branc
 substrate-test-runtime-client = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
 
 async-trait = "0.1"
+futures = "0.3"
+parking_lot = "0.11"

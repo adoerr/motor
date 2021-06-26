@@ -16,6 +16,9 @@
 
 #![allow(dead_code)]
 
+use std::collections::HashMap;
+
+use sc_service::Arc;
 use sp_blockchain::well_known_cache_keys;
 use sp_consensus::{
     import_queue::{CacheKeyId, Verifier},
@@ -27,11 +30,14 @@ use sp_runtime::{
     Justifications,
 };
 
+use futures::lock::Mutex as AsyncMutex;
+use parking_lot::Mutex;
+
 /// A Verifier that accepts all justifications and passes them on for import.
 ///
 /// Block finality and fork choice strategy are configurable.
 #[derive(Clone)]
-pub struct PassThroughVerifier {
+pub(crate) struct PassThroughVerifier {
     finalized: bool,
     fork_choice: ForkChoiceStrategy,
 }
@@ -76,5 +82,64 @@ where
         import.fork_choice = Some(self.fork_choice);
 
         Ok((import, maybe_keys))
+    }
+}
+
+/// Verifier implementation for tracking failed verifications
+pub(crate) struct TrackingVerifier<B>
+where
+    B: Block,
+{
+    inner: Arc<AsyncMutex<Box<dyn Verifier<B>>>>,
+    failed: Arc<Mutex<HashMap<B::Hash, String>>>,
+}
+
+impl<B> TrackingVerifier<B>
+where
+    B: Block,
+{
+    fn new(verifier: impl Verifier<B> + 'static) -> Self {
+        TrackingVerifier {
+            inner: Arc::new(AsyncMutex::new(Box::new(verifier))),
+            failed: Default::default(),
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl<B> Verifier<B> for TrackingVerifier<B>
+where
+    B: Block,
+{
+    async fn verify(
+        &mut self,
+        origin: BlockOrigin,
+        header: B::Header,
+        justifications: Option<Justifications>,
+        body: Option<Vec<B::Extrinsic>>,
+    ) -> Result<(BlockImportParams<B, ()>, Option<Vec<(CacheKeyId, Vec<u8>)>>), String> {
+        let hash = header.hash();
+
+        self.inner
+            .lock()
+            .await
+            .verify(origin, header, justifications, body)
+            .await
+            .map_err(|e| {
+                self.failed.lock().insert(hash, e.clone());
+                e
+            })
+    }
+}
+
+impl<B> Clone for TrackingVerifier<B>
+where
+    B: Block,
+{
+    fn clone(&self) -> Self {
+        Self {
+            inner: self.inner.clone(),
+            failed: self.failed.clone(),
+        }
     }
 }
