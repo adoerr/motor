@@ -73,7 +73,7 @@ impl BlockImport<MockBlock> for MockClient {
         cache: HashMap<CacheKeyId, Vec<u8>>,
     ) -> Result<ImportResult, Self::Error> {
         self.inner
-            .import_block(block.convert_transaction(), cache)
+            .import_block(block.clear_storage_changes_and_mutate(), cache)
             .await
     }
 }
