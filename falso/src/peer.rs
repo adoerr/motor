@@ -14,12 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+#![allow(dead_code)]
+
 use std::{pin::Pin, sync::Arc};
 
 use sc_client_api::{client::BlockImportNotification, FinalityNotification};
 use sc_consensus::LongestChain;
 use sc_network::{Multiaddr, NetworkWorker};
-use sp_consensus::BlockImport;
+use sp_consensus::{import_queue::Verifier, BlockImport};
 use substrate_test_runtime_client::{
     runtime::{Block, Hash},
     Backend,
@@ -27,10 +29,9 @@ use substrate_test_runtime_client::{
 
 use futures::{lock::Mutex as AsyncMutex, Stream};
 
-use crate::{Client, Verifier};
+use crate::Client;
 
 type BoxStream<T> = Pin<Box<dyn Stream<Item = T> + Send>>;
-
 
 /// A network peer
 pub struct Peer<BI> {

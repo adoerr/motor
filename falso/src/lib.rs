@@ -14,49 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use sc_network::config::ProtocolConfig;
-use sp_consensus::{
-    block_import::BlockImport,
-    import_queue::{BoxJustificationImport, Verifier},
-};
-
-use substrate_test_runtime_client::runtime::Block;
-
 mod client;
 mod import;
+mod network;
 mod peer;
 
 pub use client::Client;
-
-pub trait NetworkProvider {
-    type Verifier: Verifier<Block> + 'static;
-
-    type BlockImport: BlockImport<Block, Error = sp_consensus::Error>
-        + Clone
-        + Send
-        + Sync
-        + 'static;
-
-    type Link: Default;
-
-    /// Implement this method to return a mock network customized for your needs.
-    fn new() -> Self;
-
-    /// Implement this method to return a block import verifier customized for your needs.
-    fn verifier(
-        &self,
-        client: Client,
-        config: &ProtocolConfig,
-        link: &Self::Link,
-    ) -> Self::Verifier;
-
-    /// Implement this method to return a block import implementation customized for your needs.
-    fn block_import(
-        &self,
-        client: Client,
-    ) -> (
-        Self::BlockImport,
-        Option<BoxJustificationImport<Block>>,
-        Self::Link,
-    );
-}
+pub use peer::Peer;
