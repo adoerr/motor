@@ -20,23 +20,23 @@ use sp_consensus::{
     import_queue::{BoxJustificationImport, Verifier},
 };
 
-use substrate_test_runtime_client::runtime::Block as MockBlock;
+use substrate_test_runtime_client::runtime::Block;
 
 mod client;
 mod import;
 
-pub use client::MockClient;
+pub use client::Client;
 
-pub trait MockNetwork {
-    type Verifier: Verifier<MockBlock> + 'static;
+pub trait NetworkProvider {
+    type Verifier: Verifier<Block> + 'static;
 
-    type BlockImport: BlockImport<MockBlock, Error = sp_consensus::Error>
+    type BlockImport: BlockImport<Block, Error = sp_consensus::Error>
         + Clone
         + Send
         + Sync
         + 'static;
 
-    type PeerData: Default;
+    type Link: Default;
 
     /// Implement this method to return a mock network customized for your needs.
     fn new() -> Self;
@@ -44,18 +44,18 @@ pub trait MockNetwork {
     /// Implement this method to return a block import verifier customized for your needs.
     fn verifier(
         &self,
-        client: MockClient,
+        client: Client,
         config: &ProtocolConfig,
-        data: &Self::PeerData,
+        link: &Self::Link,
     ) -> Self::Verifier;
 
     /// Implement this method to return a block import implementation customized for your needs.
     fn block_import(
         &self,
-        client: MockClient,
+        client: Client,
     ) -> (
         Self::BlockImport,
-        Option<BoxJustificationImport<MockBlock>>,
-        Self::PeerData,
+        Option<BoxJustificationImport<Block>>,
+        Self::Link,
     );
 }

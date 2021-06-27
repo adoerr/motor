@@ -17,34 +17,33 @@
 use std::{collections::HashMap, sync::Arc};
 
 use sc_client_api::backend::Finalizer;
-use sc_service::client::Client;
 use sp_consensus::{
     import_queue::CacheKeyId, BlockCheckParams, BlockImport, BlockImportParams, ImportResult,
 };
 use sp_runtime::{generic::BlockId, Justification};
 
-use substrate_test_runtime_client::runtime::Block as MockBlock;
+use substrate_test_runtime_client::runtime::Block;
 
 /// Full client for test network
-pub type FullClient = Client<
+pub type FullClient = sc_service::client::Client<
     substrate_test_runtime_client::Backend,
     substrate_test_runtime_client::Executor,
-    MockBlock,
+    Block,
     substrate_test_runtime_client::runtime::RuntimeApi,
 >;
 
 /// Mock network client
 #[derive(Clone)]
-pub struct MockClient {
+pub struct Client {
     inner: Arc<FullClient>,
     backend: Arc<substrate_test_runtime_client::Backend>,
 }
 
-impl MockClient {
+impl Client {
     /// Implementation for [`sc_client_api::backend::Finalizer`]
     pub fn finalize_block(
         &self,
-        id: BlockId<MockBlock>,
+        id: BlockId<Block>,
         justification: Option<Justification>,
         notify: bool,
     ) -> sp_blockchain::Result<()> {
@@ -53,7 +52,7 @@ impl MockClient {
 }
 
 #[async_trait::async_trait]
-impl BlockImport<MockBlock> for MockClient {
+impl BlockImport<Block> for Client {
     type Error = sp_consensus::Error;
 
     type Transaction = ();
@@ -61,7 +60,7 @@ impl BlockImport<MockBlock> for MockClient {
     /// Check block preconditions
     async fn check_block(
         &mut self,
-        block: BlockCheckParams<MockBlock>,
+        block: BlockCheckParams<Block>,
     ) -> Result<ImportResult, Self::Error> {
         self.inner.check_block(block).await
     }
@@ -69,7 +68,7 @@ impl BlockImport<MockBlock> for MockClient {
     /// Import a block
     async fn import_block(
         &mut self,
-        block: BlockImportParams<MockBlock, Self::Transaction>,
+        block: BlockImportParams<Block, Self::Transaction>,
         cache: HashMap<CacheKeyId, Vec<u8>>,
     ) -> Result<ImportResult, Self::Error> {
         self.inner
