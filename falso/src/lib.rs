@@ -24,6 +24,7 @@ use substrate_test_runtime_client::runtime::Block;
 
 mod client;
 mod import;
+mod peer;
 
 pub use client::Client;
 

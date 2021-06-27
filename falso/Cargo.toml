@@ -11,6 +11,7 @@ sp-runtime = { git = "https://github.com/adoerr/substrate.git", branch = "master
 
 sc-client-api = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
 sc-client-db = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sc-consensus = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
 sc-service = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
 sc-network = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
 
