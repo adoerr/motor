@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![allow(dead_code)]
-
 use std::collections::HashMap;
 
 use sc_service::Arc;
@@ -37,20 +35,21 @@ use parking_lot::Mutex;
 ///
 /// Block finality and fork choice strategy are configurable.
 #[derive(Clone)]
-pub(crate) struct PassThroughVerifier {
+pub struct PassThroughVerifier {
     finalized: bool,
     fork_choice: ForkChoiceStrategy,
 }
 
 impl PassThroughVerifier {
-    fn new(finalized: bool) -> Self {
+    pub fn new(finalized: bool) -> Self {
         Self {
             finalized,
             fork_choice: ForkChoiceStrategy::LongestChain,
         }
     }
 
-    fn new_with_fork_choice(finalized: bool, fork_choice: ForkChoiceStrategy) -> Self {
+    #[allow(dead_code)]
+    pub fn new_with_fork_choice(finalized: bool, fork_choice: ForkChoiceStrategy) -> Self {
         Self {
             finalized,
             fork_choice,
@@ -98,6 +97,7 @@ impl<B> TrackingVerifier<B>
 where
     B: Block,
 {
+    #[allow(dead_code)]
     fn new(verifier: impl Verifier<B> + 'static) -> Self {
         TrackingVerifier {
             inner: Arc::new(AsyncMutex::new(Box::new(verifier))),

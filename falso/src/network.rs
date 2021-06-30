@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![allow(dead_code)]
-
 use sc_network::config::ProtocolConfig;
 use sp_consensus::{
     block_import::BlockImport,
@@ -25,7 +23,7 @@ use sp_consensus::{
 
 use substrate_test_runtime_client::runtime::Block;
 
-use crate::{Client, Peer};
+use crate::{import::PassThroughVerifier, Client, Peer};
 
 pub trait NetworkProvider {
     type Verifier: Verifier<Block> + 'static;
@@ -61,6 +59,41 @@ pub trait NetworkProvider {
 }
 
 pub struct Network {
+    #[allow(dead_code)]
     peers: Vec<Peer<Client>>,
+    #[allow(dead_code)]
     fork_choice: ForkChoiceStrategy,
+}
+
+impl NetworkProvider for Network {
+    type Verifier = PassThroughVerifier;
+    type BlockImport = Client;
+    type Link = ();
+
+    fn new() -> Self {
+        Network {
+            peers: Vec::new(),
+            fork_choice: ForkChoiceStrategy::LongestChain,
+        }
+    }
+
+    fn verifier(
+        &self,
+        _client: Client,
+        _config: &ProtocolConfig,
+        _link: &Self::Link,
+    ) -> Self::Verifier {
+        PassThroughVerifier::new(false)
+    }
+
+    fn block_import(
+        &self,
+        client: Client,
+    ) -> (
+        Self::BlockImport,
+        Option<BoxJustificationImport<Block>>,
+        Self::Link,
+    ) {
+        (client, None, ())
+    }
 }
