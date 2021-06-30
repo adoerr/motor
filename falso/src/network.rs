@@ -36,10 +36,10 @@ pub trait NetworkProvider {
 
     type Link: Default;
 
-    /// Implement this method to return a mock network customized for your needs.
+    /// Implement this function to return a mock network customized for your needs.
     fn new() -> Self;
 
-    /// Implement this method to return a block import verifier customized for your needs.
+    /// Implement this function to return a block import verifier customized for your needs.
     fn verifier(
         &self,
         client: Client,
@@ -47,7 +47,7 @@ pub trait NetworkProvider {
         link: &Self::Link,
     ) -> Self::Verifier;
 
-    /// Implement this method to return a block import implementation customized for your needs.
+    /// Implement this function to return a block import implementation customized for your needs.
     fn block_import(
         &self,
         client: Client,
@@ -56,10 +56,12 @@ pub trait NetworkProvider {
         Option<BoxJustificationImport<Block>>,
         Self::Link,
     );
+
+    /// Implment this function to return a mutable reference to peer `i`
+    fn peer(&mut self, i: usize) -> &mut Peer<Self::BlockImport>;
 }
 
 pub struct Network {
-    #[allow(dead_code)]
     peers: Vec<Peer<Client>>,
     #[allow(dead_code)]
     fork_choice: ForkChoiceStrategy,
@@ -95,5 +97,23 @@ impl NetworkProvider for Network {
         Self::Link,
     ) {
         (client, None, ())
+    }
+
+    fn peer(&mut self, i: usize) -> &mut Peer<Self::BlockImport> {
+        &mut self.peers[i]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Network, NetworkProvider};
+    use sp_consensus::ForkChoiceStrategy;
+
+    #[test]
+    fn new_network() {
+        let net = Network::new();
+
+        assert_eq!(net.peers.len(), 0);
+        assert_eq!(net.fork_choice, ForkChoiceStrategy::LongestChain);
     }
 }
