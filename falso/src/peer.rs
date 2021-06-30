@@ -16,7 +16,7 @@
 
 #![allow(dead_code)]
 
-use std::{pin::Pin, sync::Arc};
+use std::{borrow::Cow, pin::Pin, sync::Arc};
 
 use sc_client_api::{client::BlockImportNotification, FinalityNotification};
 use sc_consensus::LongestChain;
@@ -32,6 +32,15 @@ use futures::{lock::Mutex as AsyncMutex, Stream};
 use crate::Client;
 
 type BoxStream<T> = Pin<Box<dyn Stream<Item = T> + Send>>;
+
+#[derive(Default)]
+/// Configuration for a network peer
+pub struct PeerConfig {
+    /// Set of notification protocols a peer should participate in.
+    pub protocols: Vec<Cow<'static, str>>,
+    /// Is peer an authority or a regualr node
+    pub is_authority: bool,
+}
 
 /// A network peer
 pub struct Peer<BI> {
