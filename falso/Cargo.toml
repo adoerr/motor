@@ -7,6 +7,7 @@ edition = "2018"
 [dependencies]
 sp-blockchain = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
 sp-consensus = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+sp-core = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
 sp-runtime = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
 
 sc-client-api = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
@@ -17,7 +18,11 @@ sc-network = { git = "https://github.com/adoerr/substrate.git", branch = "master
 
 substrate-test-client = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
 substrate-test-runtime-client = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
+substrate-test-runtime = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
 
+async-std = "1.9"
 async-trait = "0.1"
 futures = "0.3"
+futures-core = "0.3"
 parking_lot = "0.11"
+rand = "0.8"

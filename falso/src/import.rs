@@ -97,8 +97,7 @@ impl<B> TrackingVerifier<B>
 where
     B: Block,
 {
-    #[allow(dead_code)]
-    fn new(verifier: impl Verifier<B> + 'static) -> Self {
+    pub(crate) fn new(verifier: impl Verifier<B> + 'static) -> Self {
         TrackingVerifier {
             inner: Arc::new(AsyncMutex::new(Box::new(verifier))),
             failed: Default::default(),

@@ -17,6 +17,7 @@
 use std::{collections::HashMap, sync::Arc};
 
 use sc_client_api::backend::Finalizer;
+use sc_consensus::LongestChain;
 use sp_consensus::{
     import_queue::CacheKeyId, BlockCheckParams, BlockImport, BlockImportParams, ImportResult,
 };
@@ -32,11 +33,15 @@ pub type FullClient = sc_service::client::Client<
     substrate_test_runtime_client::runtime::RuntimeApi,
 >;
 
+/// Client chain
+pub type ClientChain = LongestChain<substrate_test_runtime_client::Backend, Block>;
+
 /// Mock network client
 #[derive(Clone)]
 pub struct Client {
-    inner: Arc<FullClient>,
-    backend: Arc<substrate_test_runtime_client::Backend>,
+    pub(crate) inner: Arc<FullClient>,
+    pub(crate) backend: Arc<substrate_test_runtime_client::Backend>,
+    pub(crate) chain: ClientChain,
 }
 
 impl Client {
@@ -48,6 +53,11 @@ impl Client {
         notify: bool,
     ) -> sp_blockchain::Result<()> {
         self.inner.finalize_block(id, justification, notify)
+    }
+
+    // Return a clone of the client longest chain
+    pub fn chain(&self) -> ClientChain {
+        self.chain.clone()
     }
 }
 

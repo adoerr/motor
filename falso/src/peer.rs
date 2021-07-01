@@ -16,24 +16,24 @@
 
 #![allow(dead_code)]
 
-use std::{borrow::Cow, pin::Pin, sync::Arc};
+use std::{borrow::Cow, pin::Pin};
 
 use sc_client_api::{client::BlockImportNotification, FinalityNotification};
 use sc_consensus::LongestChain;
 use sc_network::{Multiaddr, NetworkWorker};
-use sp_consensus::{import_queue::Verifier, BlockImport};
+use sp_consensus::BlockImport;
 use substrate_test_runtime_client::{
     runtime::{Block, Hash},
     Backend,
 };
 
-use futures::{lock::Mutex as AsyncMutex, Stream};
+use futures::Stream;
 
-use crate::Client;
+use crate::{import::TrackingVerifier, Client};
 
 type BoxStream<T> = Pin<Box<dyn Stream<Item = T> + Send>>;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 /// Configuration for a network peer
 pub struct PeerConfig {
     /// Set of notification protocols a peer should participate in.
@@ -45,7 +45,7 @@ pub struct PeerConfig {
 /// A network peer
 pub struct Peer<BI> {
     pub(crate) client: Client,
-    pub(crate) verfifier: Arc<AsyncMutex<Box<dyn Verifier<Block>>>>,
+    pub(crate) verifier: TrackingVerifier<Block>,
     pub(crate) block_import: BI,
     pub(crate) select_chain: Option<LongestChain<Backend, Block>>,
     pub(crate) network: NetworkWorker<Block, Hash>,
