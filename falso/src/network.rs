@@ -259,12 +259,17 @@ impl NetworkProvider for Network {
 
 #[cfg(test)]
 mod tests {
-    use super::{Network, NetworkProvider};
+    use super::{Network, NetworkProvider, PeerConfig};
 
     #[test]
     fn new_network() {
-        let net = Network::new();
+        let mut net = Network::new();
 
         assert_eq!(net.peers.len(), 0);
+
+        net.add_peer(PeerConfig::default());
+        net.add_peer(PeerConfig::default());
+
+        assert_eq!(net.peers.len(), 2);
     }
 }
