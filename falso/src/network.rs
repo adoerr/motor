@@ -271,5 +271,10 @@ mod tests {
         net.add_peer(PeerConfig::default());
 
         assert_eq!(net.peers.len(), 2);
+
+        let id1 = net.peers[0].id();
+        let id2 = net.peers[1].id();
+
+        assert_ne!(id1, id2);
     }
 }

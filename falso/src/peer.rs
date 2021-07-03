@@ -28,6 +28,7 @@ use substrate_test_runtime_client::{
 };
 
 use futures::Stream;
+use libp2p::PeerId;
 
 use crate::{import::TrackingVerifier, Client};
 
@@ -59,7 +60,7 @@ where
     BI: BlockImport<Block, Error = sp_consensus::Error> + Send + Sync,
     BI::Transaction: Send,
 {
-    fn new() -> Self {
-        todo!()
+    pub fn id(&self) -> PeerId {
+        self.network.service().local_peer_id().clone()
     }
 }

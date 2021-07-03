@@ -20,9 +20,10 @@ substrate-test-client = { git = "https://github.com/adoerr/substrate.git", branc
 substrate-test-runtime-client = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
 substrate-test-runtime = { git = "https://github.com/adoerr/substrate.git", branch = "master" }
 
-async-std = "1.9"
-async-trait = "0.1"
-futures = "0.3"
-futures-core = "0.3"
-parking_lot = "0.11"
-rand = "0.8"
+async-std = { version = "1.9" }
+async-trait = { version = "0.1" }
+futures = { version = "0.3" }
+futures-core = { version = "0.3" }
+libp2p = { version = "0.38", default-features = false }
+parking_lot = { version = "0.11" }
+rand = { version = "0.8" }
