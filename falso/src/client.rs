@@ -18,6 +18,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use sc_client_api::backend::Finalizer;
 use sc_consensus::LongestChain;
+use sp_blockchain::Info;
 use sp_consensus::{
     import_queue::CacheKeyId, BlockCheckParams, BlockImport, BlockImportParams, ImportResult,
 };
@@ -55,7 +56,17 @@ impl Client {
         self.inner.finalize_block(id, justification, notify)
     }
 
-    // Return a clone of the client longest chain
+    /// Return a clone of the inner full client
+    pub fn as_full(&self) -> Arc<FullClient> {
+        self.inner.clone()
+    }
+
+    /// Return client blockchain info
+    pub fn info(&self) -> Info<Block> {
+        self.inner.chain_info()
+    }
+
+    /// Return a clone of the client longest chain
     pub fn chain(&self) -> ClientChain {
         self.chain.clone()
     }

@@ -18,10 +18,14 @@
 
 use std::{borrow::Cow, pin::Pin};
 
+use sc_block_builder::{BlockBuilder, BlockBuilderProvider};
 use sc_client_api::{client::BlockImportNotification, FinalityNotification};
 use sc_consensus::LongestChain;
 use sc_network::{Multiaddr, NetworkWorker};
-use sp_consensus::BlockImport;
+use sp_consensus::{import_queue::Verifier, BlockImport, BlockOrigin};
+use sp_core::H256;
+use sp_runtime::generic::BlockId;
+
 use substrate_test_runtime_client::{
     runtime::{Block, Hash},
     Backend,
@@ -29,8 +33,9 @@ use substrate_test_runtime_client::{
 
 use futures::Stream;
 use libp2p::PeerId;
+use log::trace;
 
-use crate::{import::TrackingVerifier, Client};
+use crate::{client::FullClient, import::TrackingVerifier, Client};
 
 type BoxStream<T> = Pin<Box<dyn Stream<Item = T> + Send>>;
 
@@ -60,7 +65,67 @@ where
     BI: BlockImport<Block, Error = sp_consensus::Error> + Send + Sync,
     BI::Transaction: Send,
 {
+    /// Return unique peer id
     pub fn id(&self) -> PeerId {
-        self.network.service().local_peer_id().clone()
+        *self.network.service().local_peer_id()
+    }
+
+    /// Add a new block.
+    ///
+    /// Adding a new block will push the block through the block import pipeline.
+    pub fn add_block(&mut self) -> Hash {
+        let best = self.client.info().best_hash;
+
+        self.block_at(BlockId::Hash(best), BlockOrigin::File, |b| {
+            b.build().unwrap().block
+        })
+    }
+
+    fn block_at<F>(&mut self, at: BlockId<Block>, origin: BlockOrigin, mut builder: F) -> H256
+    where
+        F: FnMut(BlockBuilder<Block, FullClient, Backend>) -> Block,
+    {
+        let client = self.client.as_full();
+        let parent = client.header(&at).unwrap().unwrap().hash();
+
+        let block = client
+            .new_block_at(&BlockId::Hash(parent), Default::default(), false)
+            .unwrap();
+
+        let block = builder(block);
+        let hash = block.header.hash();
+
+        trace!(target: "falso", "Block {} #{} parent: {}", hash, block.header.number, parent);
+
+        let (_, _) =
+            futures::executor::block_on(self.verifier.verify(origin, block.header, None, None))
+                .unwrap();
+
+        parent
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::str::FromStr;
+
+    use super::PeerConfig;
+    use crate::network::{Network, NetworkProvider};
+
+    use sp_core::H256;
+
+    #[test]
+    fn add_single_block() {
+        let mut net = Network::new();
+
+        net.add_peer(PeerConfig::default());
+
+        let want =
+            H256::from_str("0x57d9352b6796304d0c11931897d53cc8fbd6c0ca6a2b88f88427ae9a650cdbe5")
+                .unwrap();
+
+        let got = net.peer(0).add_block();
+
+        assert_eq!(want, got);
     }
 }

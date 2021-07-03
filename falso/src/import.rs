@@ -68,7 +68,13 @@ where
         header: B::Header,
         justifications: Option<Justifications>,
         body: Option<Vec<B::Extrinsic>>,
-    ) -> Result<(BlockImportParams<B, ()>, Option<Vec<(CacheKeyId, Vec<u8>)>>), String> {
+    ) -> Result<
+        (
+            BlockImportParams<B, ()>,
+            Option<Vec<(CacheKeyId, Vec<u8>)>>,
+        ),
+        String,
+    > {
         let maybe_keys = header
             .digest()
             .log(|l| l.try_as_raw(OpaqueDigestItemId::Consensus(b"smpl")))
