@@ -38,7 +38,9 @@ use substrate_test_runtime_client::{runtime::Block, TestClientBuilder, TestClien
 use futures::{prelude::*, FutureExt};
 use futures_core::future::BoxFuture;
 
-use crate::{import::TrackingVerifier, Client, PassThroughVerifier, Peer, PeerConfig};
+use crate::{
+    import::TrackingVerifier, AnyBlockImport, Client, PassThroughVerifier, Peer, PeerConfig,
+};
 
 pub trait NetworkProvider {
     type Verifier: Verifier<Block> + Clone + 'static;
@@ -67,7 +69,7 @@ pub trait NetworkProvider {
         &self,
         client: Client,
     ) -> (
-        Self::BlockImport,
+        AnyBlockImport<Self::BlockImport>,
         Option<BoxJustificationImport<Block>>,
         Self::Link,
     );
@@ -241,11 +243,11 @@ impl NetworkProvider for Network {
         &self,
         client: Client,
     ) -> (
-        Self::BlockImport,
+        AnyBlockImport<Self::BlockImport>,
         Option<BoxJustificationImport<Block>>,
         Self::Link,
     ) {
-        (client, None, ())
+        (client.as_block_import(), None, ())
     }
 
     fn peer(&mut self, i: usize) -> &mut Peer<Self::BlockImport> {

@@ -34,6 +34,8 @@ pub type FullClient = sc_service::client::Client<
     substrate_test_runtime_client::runtime::RuntimeApi,
 >;
 
+use crate::AnyBlockImport;
+
 /// Client chain
 pub type ClientChain = LongestChain<substrate_test_runtime_client::Backend, Block>;
 
@@ -54,6 +56,11 @@ impl Client {
         notify: bool,
     ) -> sp_blockchain::Result<()> {
         self.inner.finalize_block(id, justification, notify)
+    }
+
+    /// Return a clone of the client as [`crate::AnyBlockImport`]
+    pub fn as_block_import(&self) -> AnyBlockImport<Self> {
+        AnyBlockImport::new(self.clone())
     }
 
     /// Return a clone of the inner full client

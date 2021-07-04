@@ -16,11 +16,13 @@
 
 use std::collections::HashMap;
 
+use sc_client_api::backend::TransactionFor;
 use sc_service::Arc;
 use sp_blockchain::well_known_cache_keys;
 use sp_consensus::{
     import_queue::{CacheKeyId, Verifier},
-    BlockImportParams, BlockOrigin, ForkChoiceStrategy,
+    BlockCheckParams, BlockImport, BlockImportParams, BlockOrigin, ForkChoiceStrategy,
+    ImportResult,
 };
 use sp_runtime::{
     generic::OpaqueDigestItemId,
@@ -28,8 +30,76 @@ use sp_runtime::{
     Justifications,
 };
 
+use substrate_test_runtime_client::{runtime, Backend};
+
 use futures::lock::Mutex as AsyncMutex;
 use parking_lot::Mutex;
+
+pub trait AnyTransaction:
+    BlockImport<
+        runtime::Block,
+        Transaction = TransactionFor<Backend, runtime::Block>,
+        Error = sp_consensus::Error,
+    > + Send
+    + Sync
+    + Clone
+{
+    // empty
+}
+
+impl<T> AnyTransaction for T
+where
+    T: BlockImport<
+            runtime::Block,
+            Transaction = TransactionFor<Backend, runtime::Block>,
+            Error = sp_consensus::Error,
+        > + Send
+        + Sync
+        + Clone,
+{
+    // empty
+}
+
+/// Implements [`sp_consensus::block_import::BlockImport`] for the any transaction type.
+#[derive(Clone)]
+pub struct AnyBlockImport<BI> {
+    inner: BI,
+}
+
+impl<I> AnyBlockImport<I> {
+    pub fn new(inner: I) -> Self {
+        Self { inner }
+    }
+}
+
+#[async_trait::async_trait]
+impl<BI> BlockImport<runtime::Block> for AnyBlockImport<BI>
+where
+    BI: BlockImport<runtime::Block, Error = sp_consensus::Error> + Send + Sync,
+    BI::Transaction: Send,
+{
+    type Error = sp_consensus::Error;
+    type Transaction = ();
+
+    /// Check block preconditions
+    async fn check_block(
+        &mut self,
+        block: BlockCheckParams<runtime::Block>,
+    ) -> Result<ImportResult, Self::Error> {
+        self.inner.check_block(block).await
+    }
+
+    /// Import a block
+    async fn import_block(
+        &mut self,
+        block: BlockImportParams<runtime::Block, Self::Transaction>,
+        cache: HashMap<CacheKeyId, Vec<u8>>,
+    ) -> Result<ImportResult, Self::Error> {
+        self.inner
+            .import_block(block.clear_storage_changes_and_mutate(), cache)
+            .await
+    }
+}
 
 /// A Verifier that accepts all justifications and passes them on for import.
 ///
@@ -68,13 +138,7 @@ where
         header: B::Header,
         justifications: Option<Justifications>,
         body: Option<Vec<B::Extrinsic>>,
-    ) -> Result<
-        (
-            BlockImportParams<B, ()>,
-            Option<Vec<(CacheKeyId, Vec<u8>)>>,
-        ),
-        String,
-    > {
+    ) -> Result<(BlockImportParams<B, ()>, Option<Vec<(CacheKeyId, Vec<u8>)>>), String> {
         let maybe_keys = header
             .digest()
             .log(|l| l.try_as_raw(OpaqueDigestItemId::Consensus(b"smpl")))

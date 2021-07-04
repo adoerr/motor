@@ -20,5 +20,5 @@ mod network;
 mod peer;
 
 pub use client::Client;
-pub use import::PassThroughVerifier;
+pub use import::{AnyBlockImport, PassThroughVerifier};
 pub use peer::{Peer, PeerConfig};

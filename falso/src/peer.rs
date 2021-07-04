@@ -24,7 +24,7 @@ use sc_consensus::LongestChain;
 use sc_network::{Multiaddr, NetworkWorker};
 use sp_consensus::{import_queue::Verifier, BlockImport, BlockOrigin};
 use sp_core::H256;
-use sp_runtime::generic::BlockId;
+use sp_runtime::{generic::BlockId, traits::Header};
 
 use substrate_test_runtime_client::{
     runtime::{Block, Hash},
@@ -35,7 +35,7 @@ use futures::Stream;
 use libp2p::PeerId;
 use log::trace;
 
-use crate::{client::FullClient, import::TrackingVerifier, Client};
+use crate::{client::FullClient, import::TrackingVerifier, AnyBlockImport, Client};
 
 type BoxStream<T> = Pin<Box<dyn Stream<Item = T> + Send>>;
 
@@ -52,7 +52,7 @@ pub struct PeerConfig {
 pub struct Peer<BI> {
     pub(crate) client: Client,
     pub(crate) verifier: TrackingVerifier<Block>,
-    pub(crate) block_import: BI,
+    pub(crate) block_import: AnyBlockImport<BI>,
     pub(crate) select_chain: Option<LongestChain<Backend, Block>>,
     pub(crate) network: NetworkWorker<Block, Hash>,
     pub(crate) block_import_stream: BoxStream<BlockImportNotification<Block>>,
@@ -97,11 +97,32 @@ where
 
         trace!(target: "falso", "Block {} #{} parent: {}", hash, block.header.number, parent);
 
-        let (_, _) =
+        let (block_import, cache) =
             futures::executor::block_on(self.verifier.verify(origin, block.header, None, None))
                 .unwrap();
 
-        parent
+        let cache = if let Some(cache) = cache {
+            cache.into_iter().collect()
+        } else {
+            Default::default()
+        };
+
+        futures::executor::block_on(self.block_import.import_block(block_import, cache))
+            .expect("import block failed");
+
+        self.network.service().announce_block(hash, None);
+
+        self.network.new_best_block_imported(
+            hash,
+            *client
+                .header(&BlockId::Hash(hash))
+                .ok()
+                .flatten()
+                .unwrap()
+                .number(),
+        );
+
+        hash
     }
 }
 
@@ -121,7 +142,7 @@ mod tests {
         net.add_peer(PeerConfig::default());
 
         let want =
-            H256::from_str("0x57d9352b6796304d0c11931897d53cc8fbd6c0ca6a2b88f88427ae9a650cdbe5")
+            H256::from_str("0x2b999b3e9eb1ad3f086f7ef961a38c71a7636fb76d2ccce8216da3ec0b9c7e8d")
                 .unwrap();
 
         let got = net.peer(0).add_block();
