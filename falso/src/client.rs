@@ -36,15 +36,12 @@ pub type FullClient = sc_service::client::Client<
 
 use crate::AnyBlockImport;
 
-/// Client chain
-pub type ClientChain = LongestChain<substrate_test_runtime_client::Backend, Block>;
-
 /// Mock network client
 #[derive(Clone)]
 pub struct Client {
     pub(crate) inner: Arc<FullClient>,
     pub(crate) backend: Arc<substrate_test_runtime_client::Backend>,
-    pub(crate) chain: ClientChain,
+    pub(crate) chain: LongestChain<substrate_test_runtime_client::Backend, Block>,
 }
 
 impl Client {
@@ -74,7 +71,7 @@ impl Client {
     }
 
     /// Return a clone of the client longest chain
-    pub fn chain(&self) -> ClientChain {
+    pub fn chain(&self) -> LongestChain<substrate_test_runtime_client::Backend, Block> {
         self.chain.clone()
     }
 }
