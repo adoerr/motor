@@ -77,8 +77,10 @@ pub trait NetworkProvider {
     /// Implment this function to return a mutable reference to peer `i`
     fn peer(&mut self, i: usize) -> &mut Peer<Self::BlockImport>;
 
-    /// Implement this function to return a mutable reference to the peer vector
-    fn mut_peers<F: FnOnce(&mut Vec<Peer<Self::BlockImport>>)>(&mut self, closure: F);
+    /// Implement this function to mutate all peers with a `mutator`
+    fn mutate_peers<M>(&mut self, mutator: M)
+    where
+        M: FnOnce(&mut Vec<Peer<Self::BlockImport>>);
 
     #[allow(dead_code)]
     /// Add a peer with `config` peer configuration
@@ -96,8 +98,6 @@ pub trait NetworkProvider {
             &sp_core::testing::TaskExecutor::new(),
             None,
         ));
-
-        let net_config = network_config(config.clone());
 
         let protocol_id = ProtocolId::from("falso-protocol-name");
 
@@ -122,6 +122,8 @@ pub trait NetworkProvider {
             protocol_config
         };
 
+        let net_cfg = network_config(config.clone());
+
         let network = NetworkWorker::new(sc_network::config::Params {
             role: if config.is_authority {
                 Role::Authority
@@ -132,7 +134,7 @@ pub trait NetworkProvider {
             transactions_handler_executor: Box::new(|tsk| {
                 async_std::task::spawn(tsk);
             }),
-            network_config: net_config.clone(),
+            network_config: net_cfg.clone(),
             chain: client.inner.clone(),
             on_demand: None,
             transaction_pool: Arc::new(EmptyTransactionPool),
@@ -146,11 +148,11 @@ pub trait NetworkProvider {
         })
         .unwrap();
 
-        self.mut_peers(move |peers| {
+        self.mutate_peers(move |peers| {
             for peer in peers.iter_mut() {
                 peer.network.add_known_address(
                     *network.service().local_peer_id(),
-                    net_config.listen_addresses[0].clone(),
+                    net_cfg.listen_addresses[0].clone(),
                 );
             }
 
@@ -167,7 +169,7 @@ pub trait NetworkProvider {
                 network,
                 block_import_stream,
                 finality_notification_stream,
-                listen_addr: net_config.listen_addresses[0].clone(),
+                listen_addr: net_cfg.listen_addresses[0].clone(),
             });
         });
     }
@@ -254,8 +256,11 @@ impl NetworkProvider for Network {
         &mut self.peers[i]
     }
 
-    fn mut_peers<F: FnOnce(&mut Vec<Peer<Self::BlockImport>>)>(&mut self, closure: F) {
-        closure(&mut self.peers);
+    fn mutate_peers<M>(&mut self, mutator: M)
+    where
+        M: FnOnce(&mut Vec<Peer<Self::BlockImport>>),
+    {
+        mutator(&mut self.peers);
     }
 }
 
