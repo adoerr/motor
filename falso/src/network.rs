@@ -14,14 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use std::sync::Arc;
+use std::{
+    sync::Arc,
+    task::{Context, Poll},
+};
 
 use sc_client_api::BlockchainEvents;
 use sc_network::{
     block_request_handler::BlockRequestHandler,
     config::{
         build_multiaddr, EmptyTransactionPool, NetworkConfiguration, NonDefaultSetConfig,
-        ProtocolConfig, ProtocolId, Role, SyncMode, TransportConfig,
+        ProtocolConfig, ProtocolId, Role, SetConfig, SyncMode, TransportConfig,
     },
     light_client_requests::handler::LightClientRequestHandler,
     state_request_handler::StateRequestHandler,
@@ -37,6 +40,7 @@ use substrate_test_runtime_client::{runtime::Block, TestClientBuilder, TestClien
 
 use futures::{prelude::*, FutureExt};
 use futures_core::future::BoxFuture;
+use log::trace;
 
 use crate::{
     import::TrackingVerifier, AnyBlockImport, Client, PassThroughVerifier, Peer, PeerConfig,
@@ -76,6 +80,9 @@ pub trait NetworkProvider {
 
     /// Implment this function to return a mutable reference to peer `i`
     fn peer(&mut self, i: usize) -> &mut Peer<Self::BlockImport>;
+
+    /// Implement this function to return a reference to the vector of peers
+    fn peers(&self) -> &Vec<Peer<Self::BlockImport>>;
 
     /// Implement this function to mutate all peers with a `mutator`
     fn mutate_peers<M>(&mut self, mutator: M)
@@ -174,8 +181,65 @@ pub trait NetworkProvider {
         });
     }
 
+    /// Spawn background tasks
     fn spawn_task(&self, f: BoxFuture<'static, ()>) {
         async_std::task::spawn(f);
+    }
+
+    /// Poll the network. Polling process all pending events
+    fn poll(&mut self, cx: &mut Context) {
+        self.mutate_peers(|peers| {
+            for (i, peer) in peers.iter_mut().enumerate() {
+                trace!(target: "falso", "Polling peer {}: {}", i, peer.id());
+
+                if let Poll::Ready(()) = peer.network.poll_unpin(cx) {
+                    panic!("Network worker terminated unexpectedly")
+                }
+
+                trace!(target: "falso", "Done polling peer {}: {}", i, peer.id());
+
+                // process pending block import notifications
+                while let Poll::Ready(Some(imported)) =
+                    peer.block_import_stream.as_mut().poll_next(cx)
+                {
+                    peer.network.service().announce_block(imported.hash, None);
+                }
+
+                // process pending finality notifications, but only act on the last one
+                let mut last = None;
+
+                while let Poll::Ready(Some(finalized)) =
+                    peer.finality_notification_stream.as_mut().poll_next(cx)
+                {
+                    last = Some(finalized);
+                }
+
+                if let Some(finalized) = last {
+                    peer.network
+                        .on_block_finalized(finalized.hash, finalized.header);
+                }
+            }
+        });
+    }
+
+    /// Poll the network, until all peers are connected to each other.
+    fn poll_connected(&mut self, cx: &mut Context) -> Poll<()> {
+        self.poll(cx);
+
+        let others = self.peers().len() - 1;
+
+        if self.peers().iter().all(|p| p.connected_peers() == others) {
+            return Poll::Ready(());
+        }
+
+        Poll::Pending
+    }
+
+    /// Block until all peers are connected to each other
+    fn block_until_connected(&mut self) {
+        futures::executor::block_on(futures::future::poll_fn::<(), _>(|cx| {
+            self.poll_connected(cx)
+        }))
     }
 }
 
@@ -204,6 +268,7 @@ fn network_config(config: PeerConfig) -> NetworkConfiguration {
     net_cfg.transport = TransportConfig::MemoryOnly;
     net_cfg.listen_addresses = vec![build_multiaddr![Memory(rand::random::<u64>())]];
     net_cfg.allow_non_globals_in_dht = true;
+    net_cfg.default_peers_set = SetConfig::default();
     net_cfg.extra_sets = config
         .protocols
         .into_iter()
@@ -256,6 +321,10 @@ impl NetworkProvider for Network {
         &mut self.peers[i]
     }
 
+    fn peers(&self) -> &Vec<Peer<Self::BlockImport>> {
+        &self.peers
+    }
+
     fn mutate_peers<M>(&mut self, mutator: M)
     where
         M: FnOnce(&mut Vec<Peer<Self::BlockImport>>),
@@ -279,9 +348,28 @@ mod tests {
 
         assert_eq!(net.peers.len(), 2);
 
-        let id1 = net.peers[0].id();
-        let id2 = net.peers[1].id();
+        let id1 = net.peer(0).id();
+        let id2 = net.peer(1).id();
 
         assert_ne!(id1, id2);
+        assert_eq!(0, net.peer(0).connected_peers());
+        assert_eq!(0, net.peer(1).connected_peers());
+    }
+
+    #[test]
+    fn connect_all_peers() {
+        let mut net = Network::new();
+
+        for _ in 0..5 {
+            net.add_peer(PeerConfig::default());
+        }
+
+        assert!(net.peers().iter().all(|p| p.connected_peers() == 0));
+
+        net.block_until_connected();
+
+        let others = net.peers().len() - 1;
+
+        assert!(net.peers().iter().all(|p| p.connected_peers() == others));
     }
 }

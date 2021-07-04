@@ -70,6 +70,16 @@ where
         *self.network.service().local_peer_id()
     }
 
+    /// Return a reference to the network, i.e. the peer's network worker
+    pub fn network(&self) -> &NetworkWorker<Block, Hash> {
+        &self.network
+    }
+
+    /// Return the number of peers this peer is connected to
+    pub fn connected_peers(&self) -> usize {
+        self.network.num_connected_peers()
+    }
+
     /// Add a new block.
     ///
     /// Adding a new block will push the block through the block import pipeline.
