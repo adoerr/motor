@@ -205,16 +205,10 @@ pub trait NetworkProvider {
                     peer.network.service().announce_block(imported.hash, None);
                 }
 
-                // process pending finality notifications, but only act on the last one
-                let mut last = None;
-
+                // process pending finality notifications
                 while let Poll::Ready(Some(finalized)) =
                     peer.finality_notification_stream.as_mut().poll_next(cx)
                 {
-                    last = Some(finalized);
-                }
-
-                if let Some(finalized) = last {
                     peer.network
                         .on_block_finalized(finalized.hash, finalized.header);
                 }

@@ -152,7 +152,7 @@ mod tests {
         net.add_peer(PeerConfig::default());
 
         let want =
-            H256::from_str("0x2b999b3e9eb1ad3f086f7ef961a38c71a7636fb76d2ccce8216da3ec0b9c7e8d")
+            H256::from_str("0xdd657aa8ecd4d525d709246b6f6b322458cf534e9bee58135721490a106e6f26")
                 .unwrap();
 
         let got = net.peer(0).add_block();
