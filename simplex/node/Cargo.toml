@@ -23,6 +23,7 @@ sc-rpc = { git = "https://github.com/paritytech/substrate.git", branch = "master
 sc-rpc-api = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sc-service = { git = "https://github.com/paritytech/substrate.git", branch = "master", features = ["wasmtime"] }
 sc-transaction-pool = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
+sc-transaction-pool-api = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 
 sp-api = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-block-builder = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
@@ -33,7 +34,6 @@ sp-inherents = { git = "https://github.com/paritytech/substrate.git", branch = "
 sp-keyring = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-runtime = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-timestamp = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
-sp-transaction-pool = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 
 substrate-frame-rpc-system = { git = "https://github.com/paritytech/substrate.git", branch = "master" } 
 pallet-transaction-payment-rpc = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
