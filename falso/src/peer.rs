@@ -75,6 +75,11 @@ where
         &self.network
     }
 
+    /// Return a reference to the peer's client
+    pub fn client(&self) -> &Client {
+        &self.client
+    }
+
     /// Return the number of peers this peer is connected to
     pub fn connected_peers(&self) -> usize {
         self.network.num_connected_peers()
@@ -151,8 +156,25 @@ mod tests {
         net.add_peer(PeerConfig::default());
         net.peer(0).add_block();
 
-        let best = net.peer(0).client.info().best_number;
+        let best = net.peer(0).client().info().best_number;
 
         assert_eq!(1, best);
+    }
+
+    #[test]
+    #[should_panic]
+    fn add_multiple_blocks() {
+        let _ = env_logger::try_init();
+
+        let mut net = Network::new();
+
+        net.add_peer(PeerConfig::default());
+
+        for _ in 0..5 {
+            net.peer(0).add_block();
+        }
+
+        let best = net.peer(0).client().info().best_number;
+        assert_ne!(best, best);
     }
 }

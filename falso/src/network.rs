@@ -186,7 +186,11 @@ pub trait NetworkProvider {
         async_std::task::spawn(f);
     }
 
-    /// Poll the network. Polling process all pending events
+    /// Poll the network. Polling will process all pending events
+    ///
+    /// Note that we merge multiple pending finality notifications together and only
+    /// act on the last one. This is the same behaviour as (indirectly) exhibited by
+    /// [`sc_service::build_network()`]
     fn poll(&mut self, cx: &mut Context) {
         self.mutate_peers(|peers| {
             for (i, peer) in peers.iter_mut().enumerate() {
@@ -205,10 +209,16 @@ pub trait NetworkProvider {
                     peer.network.service().announce_block(imported.hash, None);
                 }
 
-                // process pending finality notifications
+                // merge pending finality notifications, only process the last one
+                let mut last = None;
+
                 while let Poll::Ready(Some(finalized)) =
                     peer.finality_notification_stream.as_mut().poll_next(cx)
                 {
+                    last = Some(finalized);
+                }
+
+                if let Some(finalized) = last {
                     peer.network
                         .on_block_finalized(finalized.hash, finalized.header);
                 }
