@@ -138,25 +138,21 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
     use super::PeerConfig;
-    use crate::network::{Network, NetworkProvider};
 
-    use sp_core::H256;
+    use crate::network::{Network, NetworkProvider};
 
     #[test]
     fn add_single_block() {
+        let _ = env_logger::try_init();
+
         let mut net = Network::new();
 
         net.add_peer(PeerConfig::default());
+        net.peer(0).add_block();
 
-        let want =
-            H256::from_str("0x47345d8dfaa16bd97f7b054a56fcac2a772010b317c0cf7c6fac117149a11b1c")
-                .unwrap();
+        let best = net.peer(0).client.info().best_number;
 
-        let got = net.peer(0).add_block();
-
-        assert_eq!(want, got);
+        assert_eq!(1, best);
     }
 }
