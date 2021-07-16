@@ -97,6 +97,17 @@ where
         })
     }
 
+    /// Add `count` blocks at best block
+    ///
+    /// Adding blocks will push them through the block import pipeline.
+    pub fn add_blocks(&mut self, count: usize) -> Hash {
+        let best = self.client.info().best_hash;
+
+        self.blocks_at(BlockId::Hash(best), count, BlockOrigin::File, |b| {
+            b.build().unwrap().block
+        })
+    }
+
     fn blocks_at<F>(
         &mut self,
         at: BlockId<Block>,
@@ -113,7 +124,7 @@ where
         for _ in 0..count {
             let block = client
                 .new_block_at(&BlockId::Hash(at), Default::default(), false)
-                .unwrap();
+                .expect("new_block_at() failed");
 
             let block = builder(block);
             let hash = block.header.hash();
@@ -172,7 +183,6 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn add_multiple_blocks() {
         let _ = env_logger::try_init();
 
@@ -180,11 +190,9 @@ mod tests {
 
         net.add_peer(PeerConfig::default());
 
-        for _ in 0..5 {
-            net.peer(0).add_block();
-        }
+        let hash = net.peer(0).add_blocks(5);
+        let best = net.peer(0).client().info().best_hash;
 
-        let best = net.peer(0).client().info().best_number;
-        assert_ne!(best, best);
+        assert_eq!(hash, best);
     }
 }
