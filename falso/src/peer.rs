@@ -86,59 +86,68 @@ where
         self.network.num_connected_peers()
     }
 
-    /// Add a new block.
+    /// Add a new block at best block.
     ///
     /// Adding a new block will push the block through the block import pipeline.
     pub fn add_block(&mut self) -> Hash {
         let best = self.client.info().best_hash;
 
-        self.block_at(BlockId::Hash(best), BlockOrigin::File, |b| {
+        self.blocks_at(BlockId::Hash(best), 1, BlockOrigin::File, |b| {
             b.build().unwrap().block
         })
     }
 
-    fn block_at<F>(&mut self, at: BlockId<Block>, origin: BlockOrigin, mut builder: F) -> H256
+    fn blocks_at<F>(
+        &mut self,
+        at: BlockId<Block>,
+        count: usize,
+        origin: BlockOrigin,
+        mut builder: F,
+    ) -> H256
     where
         F: FnMut(BlockBuilder<Block, FullClient, Backend>) -> Block,
     {
         let client = self.client.as_full();
-        let parent = client.header(&at).unwrap().unwrap().hash();
+        let mut at = client.header(&at).unwrap().unwrap().hash();
 
-        let block = client
-            .new_block_at(&BlockId::Hash(parent), Default::default(), false)
-            .unwrap();
-
-        let block = builder(block);
-        let hash = block.header.hash();
-
-        trace!(target: "falso", "Block {} #{} parent: {}", hash, block.header.number, parent);
-
-        let (block_import, cache) =
-            futures::executor::block_on(self.verifier.verify(origin, block.header, None, None))
+        for _ in 0..count {
+            let block = client
+                .new_block_at(&BlockId::Hash(at), Default::default(), false)
                 .unwrap();
 
-        let cache = if let Some(cache) = cache {
-            cache.into_iter().collect()
-        } else {
-            Default::default()
-        };
+            let block = builder(block);
+            let hash = block.header.hash();
 
-        futures::executor::block_on(self.block_import.import_block(block_import, cache))
-            .expect("import block failed");
+            trace!(target: "falso", "Block {} #{} parent: {}", hash, block.header.number, at);
 
-        self.network.service().announce_block(hash, None);
+            let (block_import, cache) =
+                futures::executor::block_on(self.verifier.verify(origin, block.header, None, None))
+                    .unwrap();
 
+            let cache = if let Some(cache) = cache {
+                cache.into_iter().collect()
+            } else {
+                Default::default()
+            };
+
+            futures::executor::block_on(self.block_import.import_block(block_import, cache))
+                .expect("import block failed");
+
+            self.network.service().announce_block(hash, None);
+
+            at = hash;
+        }
         self.network.new_best_block_imported(
-            hash,
+            at,
             *client
-                .header(&BlockId::Hash(hash))
+                .header(&BlockId::Hash(at))
                 .ok()
                 .flatten()
                 .unwrap()
                 .number(),
         );
 
-        hash
+        at
     }
 }
 
