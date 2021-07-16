@@ -79,15 +79,15 @@ pub trait NetworkProvider {
     );
 
     /// Implment this function to return a mutable reference to peer `i`
-    fn peer(&mut self, i: usize) -> &mut Peer<Self::BlockImport>;
+    fn peer(&mut self, i: usize) -> &mut Peer<Self::Link, Self::BlockImport>;
 
     /// Implement this function to return a reference to the vector of peers
-    fn peers(&self) -> &Vec<Peer<Self::BlockImport>>;
+    fn peers(&self) -> &Vec<Peer<Self::Link, Self::BlockImport>>;
 
     /// Implement this function to mutate all peers with a `mutator`
     fn mutate_peers<M>(&mut self, mutator: M)
     where
-        M: FnOnce(&mut Vec<Peer<Self::BlockImport>>);
+        M: FnOnce(&mut Vec<Peer<Self::Link, Self::BlockImport>>);
 
     #[allow(dead_code)]
     /// Add a peer with `config` peer configuration
@@ -169,6 +169,7 @@ pub trait NetworkProvider {
                 Box::pin(client.inner.finality_notification_stream().fuse());
 
             peers.push(Peer {
+                link,
                 client: client.clone(),
                 verifier: TrackingVerifier::new(verifier),
                 block_import,
@@ -289,7 +290,7 @@ fn network_config(config: PeerConfig) -> NetworkConfiguration {
 
 /// A simple default network
 pub struct Network {
-    peers: Vec<Peer<Client>>,
+    peers: Vec<Peer<(), Client>>,
 }
 
 impl NetworkProvider for Network {
@@ -321,17 +322,17 @@ impl NetworkProvider for Network {
         (client.as_block_import(), None, ())
     }
 
-    fn peer(&mut self, i: usize) -> &mut Peer<Self::BlockImport> {
+    fn peer(&mut self, i: usize) -> &mut Peer<Self::Link, Self::BlockImport> {
         &mut self.peers[i]
     }
 
-    fn peers(&self) -> &Vec<Peer<Self::BlockImport>> {
+    fn peers(&self) -> &Vec<Peer<Self::Link, Self::BlockImport>> {
         &self.peers
     }
 
     fn mutate_peers<M>(&mut self, mutator: M)
     where
-        M: FnOnce(&mut Vec<Peer<Self::BlockImport>>),
+        M: FnOnce(&mut Vec<Peer<Self::Link, Self::BlockImport>>),
     {
         mutator(&mut self.peers);
     }

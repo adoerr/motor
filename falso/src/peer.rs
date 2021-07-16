@@ -49,7 +49,8 @@ pub struct PeerConfig {
 }
 
 /// A network peer
-pub struct Peer<BI> {
+pub struct Peer<L, BI> {
+    pub(crate) link: L,
     pub(crate) client: Client,
     pub(crate) verifier: TrackingVerifier<Block>,
     pub(crate) block_import: AnyBlockImport<BI>,
@@ -60,7 +61,7 @@ pub struct Peer<BI> {
     pub(crate) listen_addr: Multiaddr,
 }
 
-impl<BI> Peer<BI>
+impl<L, BI> Peer<L, BI>
 where
     BI: BlockImport<Block, Error = sp_consensus::Error> + Send + Sync,
     BI::Transaction: Send,
