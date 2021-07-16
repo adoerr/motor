@@ -343,6 +343,8 @@ mod tests {
 
     #[test]
     fn new_network() {
+        let _ = env_logger::try_init();
+
         let mut net = Network::new();
 
         assert_eq!(net.peers.len(), 0);
@@ -362,6 +364,8 @@ mod tests {
 
     #[test]
     fn connect_all_peers() {
+        let _ = env_logger::try_init();
+
         let mut net = Network::new();
 
         for _ in 0..5 {
