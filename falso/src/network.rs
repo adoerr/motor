@@ -43,7 +43,8 @@ use futures_core::future::BoxFuture;
 use log::trace;
 
 use crate::{
-    import::TrackingVerifier, AnyBlockImport, Client, PassThroughVerifier, Peer, PeerConfig,
+    import::TrackingVerifier, AnyBlockImport, Client, Finalizer, PassThroughVerifier, Peer,
+    PeerConfig,
 };
 
 pub trait NetworkProvider {
@@ -350,7 +351,11 @@ impl NetworkProvider for Network {
         Option<BoxJustificationImport<Block>>,
         Self::Link,
     ) {
-        (client.as_block_import(), None, ())
+        (
+            client.as_block_import(),
+            Some(Box::new(Finalizer(client))),
+            Default::default(),
+        )
     }
 
     fn peer(&mut self, i: usize) -> &mut Peer<Self::Link, Self::BlockImport> {

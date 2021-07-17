@@ -20,20 +20,24 @@ use sc_client_api::backend::TransactionFor;
 use sc_service::Arc;
 use sp_blockchain::well_known_cache_keys;
 use sp_consensus::{
+    block_import::JustificationImport,
     import_queue::{CacheKeyId, Verifier},
     BlockCheckParams, BlockImport, BlockImportParams, BlockOrigin, ForkChoiceStrategy,
     ImportResult,
 };
+use sp_core::H256;
 use sp_runtime::{
-    generic::OpaqueDigestItemId,
-    traits::{Block, Header},
-    Justifications,
+    generic::{BlockId, OpaqueDigestItemId},
+    traits::{Block, Header, NumberFor},
+    Justification, Justifications,
 };
 
 use substrate_test_runtime_client::{runtime, Backend};
 
 use futures::lock::Mutex as AsyncMutex;
 use parking_lot::Mutex;
+
+use crate::Client;
 
 pub trait AnyTransaction:
     BlockImport<
@@ -118,7 +122,6 @@ impl PassThroughVerifier {
         }
     }
 
-    #[allow(dead_code)]
     pub fn new_with_fork_choice(finalized: bool, fork_choice: ForkChoiceStrategy) -> Self {
         Self {
             finalized,
@@ -151,6 +154,30 @@ where
         import.fork_choice = Some(self.fork_choice);
 
         Ok((import, maybe_keys))
+    }
+}
+
+/// A [`sp_consensus::block_import::JustificationImport`] implementation that
+/// will always finalize the imported block.
+pub struct Finalizer(pub Client);
+
+#[async_trait::async_trait]
+impl JustificationImport<runtime::Block> for Finalizer {
+    type Error = sp_consensus::Error;
+
+    async fn on_start(&mut self) -> Vec<(H256, NumberFor<runtime::Block>)> {
+        Vec::new()
+    }
+
+    async fn import_justification(
+        &mut self,
+        hash: H256,
+        _number: NumberFor<runtime::Block>,
+        justification: Justification,
+    ) -> Result<(), Self::Error> {
+        self.0
+            .finalize_block(BlockId::Hash(hash), Some(justification), true)
+            .map_err(|_| sp_consensus::Error::InvalidJustification)
     }
 }
 
