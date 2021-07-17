@@ -86,6 +86,11 @@ where
         self.network.num_connected_peers()
     }
 
+    /// Return whether peer is currently syncing
+    pub fn is_syncing(&self) -> bool {
+        self.network.service().is_major_syncing()
+    }
+
     /// Add a new block at best block.
     ///
     /// Adding a new block will push the block through the block import pipeline.
@@ -191,6 +196,9 @@ mod tests {
         net.add_peer(PeerConfig::default());
 
         let hash = net.peer(0).add_blocks(5);
+
+        net.block_until_synced();
+
         let best = net.peer(0).client().info().best_hash;
 
         assert_eq!(hash, best);

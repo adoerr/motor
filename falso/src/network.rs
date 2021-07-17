@@ -240,11 +240,42 @@ pub trait NetworkProvider {
         Poll::Pending
     }
 
+    /// Poll the network until all peers have synced
+    fn poll_synced(&mut self, cx: &mut Context) -> Poll<()> {
+        self.poll(cx);
+
+        // we keep polling until all peers agree on the best block
+        let mut best = None;
+
+        for peer in self.peers().iter() {
+            if peer.is_syncing() || peer.network.num_queued_blocks() != 0 {
+                return Poll::Pending;
+            }
+
+            if peer.network.num_sync_requests() != 0 {
+                return Poll::Pending;
+            }
+
+            match (best, peer.client.info().best_hash) {
+                (None, hash) => best = Some(hash),
+                (Some(ref a), ref b) if a == b => {}
+                (Some(_), _) => return Poll::Pending,
+            }
+        }
+
+        Poll::Ready(())
+    }
+
     /// Block until all peers are connected to each other
     fn block_until_connected(&mut self) {
         futures::executor::block_on(futures::future::poll_fn::<(), _>(|cx| {
             self.poll_connected(cx)
         }))
+    }
+
+    /// Block until all peers finished syncing
+    fn block_until_synced(&mut self) {
+        futures::executor::block_on(futures::future::poll_fn::<(), _>(|cx| self.poll_synced(cx)))
     }
 }
 
