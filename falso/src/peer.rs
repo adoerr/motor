@@ -138,7 +138,7 @@ where
 
             let (block_import, cache) =
                 futures::executor::block_on(self.verifier.verify(origin, block.header, None, None))
-                    .unwrap();
+                    .expect("verify block failed");
 
             let cache = if let Some(cache) = cache {
                 cache.into_iter().collect()
