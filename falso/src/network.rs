@@ -101,6 +101,7 @@ pub trait NetworkProvider {
         let (block_import, justification_import, link) = self.block_import(client.clone());
 
         let verifier = self.verifier(client.clone(), &Default::default(), &link);
+        let verifier = TrackingVerifier::new(verifier);
 
         let import_queue = Box::new(BasicQueue::new(
             verifier.clone(),
@@ -175,7 +176,7 @@ pub trait NetworkProvider {
             peers.push(Peer {
                 link,
                 client: client.clone(),
-                verifier: TrackingVerifier::new(verifier),
+                verifier,
                 block_import,
                 select_chain: Some(client.chain()),
                 network,
