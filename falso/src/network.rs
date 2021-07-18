@@ -20,6 +20,9 @@ use std::{
 };
 
 use sc_client_api::BlockchainEvents;
+use sc_client_db::{
+    Backend, DatabaseSettings, DatabaseSettingsSrc, KeepBlocks, PruningMode, TransactionStorageMode,
+};
 use sc_network::{
     block_request_handler::BlockRequestHandler,
     config::{
@@ -282,7 +285,22 @@ pub trait NetworkProvider {
 
 // Return a mock network client for a new peer
 fn client() -> Client {
-    let builder = TestClientBuilder::with_default_backend();
+    let db = kvdb_memorydb::create(12);
+    let db = sp_database::as_database(db);
+
+    let db_settings = DatabaseSettings {
+        state_cache_size: 16777216,
+        state_cache_child_ratio: Some((50, 100)),
+        state_pruning: PruningMode::default(),
+        source: DatabaseSettingsSrc::Custom(db),
+        keep_blocks: KeepBlocks::All,
+        transaction_storage: TransactionStorageMode::BlockBody,
+    };
+
+    let backend = Backend::new(db_settings, 0).expect("failed to create test backend");
+    let backend = Arc::new(backend);
+
+    let builder = TestClientBuilder::with_backend(backend);
 
     let backend = builder.backend();
 

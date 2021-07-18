@@ -7,6 +7,7 @@ edition = "2018"
 [dependencies]
 sp-blockchain = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-consensus = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
+sp-database = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-core = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-runtime = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 
@@ -25,6 +26,7 @@ async-std = { version = "1.9" }
 async-trait = { version = "0.1" }
 futures = { version = "0.3" }
 futures-core = { version = "0.3" }
+kvdb-memorydb = { version = "0.10" }
 libp2p = { version = "0.38", default-features = false }
 log = { version = "0.4" }
 parking_lot = { version = "0.11" }
