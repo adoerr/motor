@@ -124,12 +124,13 @@ where
         F: FnMut(BlockBuilder<Block, FullClient, Backend>) -> Block,
     {
         let client = self.client.as_full();
-        let mut at = client.header(&at).unwrap().unwrap().hash();
+
+        let mut best: H256 = [0u8; 32].into();
 
         for _ in 0..count {
             let block = client
-                .new_block_at(&BlockId::Hash(at), Default::default(), false)
-                .expect("new_block_at() failed");
+                .new_block(Default::default())
+                .expect("new_block() failed");
 
             let block = builder(block);
             let hash = block.header.hash();
@@ -151,19 +152,20 @@ where
 
             self.network.service().announce_block(hash, None);
 
-            at = hash;
+            best = hash;
         }
+
         self.network.new_best_block_imported(
-            at,
+            best,
             *client
-                .header(&BlockId::Hash(at))
+                .header(&BlockId::Hash(best))
                 .ok()
                 .flatten()
                 .unwrap()
                 .number(),
         );
 
-        at
+        best
     }
 }
 
