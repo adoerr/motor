@@ -3,6 +3,7 @@ panic = "unwind"
 
 [workspace]
 members = [
+    "emptor",
     "falso",
     "simplex/node",
     "simplex/runtime",
