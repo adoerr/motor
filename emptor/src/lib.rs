@@ -9,7 +9,7 @@ use sp_state_machine::{ChangesTrieCacheAction, IndexOperation, MemoryDB, TrieDBM
 
 type Block = sp_runtime::testing::Block<ExtrinsicWrapper<u64>>;
 
-pub fn prepare_changes(changes: Vec<(Vec<u8>, Vec<u8>)>) -> (H256, MemoryDB<BlakeTwo256>) {
+pub fn changes_trie(changes: Vec<(Vec<u8>, Vec<u8>)>) -> (H256, MemoryDB<BlakeTwo256>) {
     let mut root = H256::default();
     let mut trie_update = MemoryDB::<BlakeTwo256>::default();
 
@@ -18,11 +18,29 @@ pub fn prepare_changes(changes: Vec<(Vec<u8>, Vec<u8>)>) -> (H256, MemoryDB<Blak
 
         for (key, val) in changes {
             trie.insert(&key, &val)
-                .expect("Trie K/V pair insert failed");
+                .expect("trie k/v pair insert failed");
         }
     }
 
     (root, trie_update)
+}
+
+pub fn insert_header(
+    backend: &sc_client_db::Backend<Block>,
+    number: u64,
+    parent_hash: H256,
+    changes: Option<Vec<(Vec<u8>, Vec<u8>)>>,
+    extrinsics_root: H256,
+) -> H256 {
+    insert_block(
+        backend,
+        number,
+        parent_hash,
+        changes,
+        extrinsics_root,
+        Vec::new(),
+        None,
+    )
 }
 
 pub fn insert_block(
@@ -38,7 +56,7 @@ pub fn insert_block(
     let mut changes_trie_update = Default::default();
 
     if let Some(changes) = changes {
-        let (root, update) = prepare_changes(changes);
+        let (root, update) = changes_trie(changes);
 
         digest.push(DigestItem::ChangesTrieRoot(root));
         changes_trie_update = update;
