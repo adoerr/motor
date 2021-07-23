@@ -1346,6 +1346,7 @@ dependencies = [
  "log",
  "sc-client-api",
  "sc-client-db",
+ "sc-state-db",
  "sp-blockchain",
  "sp-core",
  "sp-database",

@@ -101,3 +101,36 @@ pub fn insert_block(
 
     hash
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{insert_header, Block};
+
+    use sc_client_api::Backend;
+    use sp_blockchain::HeaderBackend;
+
+    #[test]
+    fn insert_header_works() {
+        let db = sc_client_db::Backend::<Block>::new_test(1, 0);
+
+        for i in 0..10 {
+            assert!(db.blockchain().hash(i).unwrap().is_none());
+
+            insert_header(
+                &db,
+                i,
+                if i == 0 {
+                    Default::default()
+                } else {
+                    db.blockchain().hash(i - 1).unwrap().unwrap()
+                },
+                None,
+                Default::default(),
+            );
+
+            assert!(db.blockchain().hash(i).unwrap().is_some());
+        }
+
+        assert_eq!(9, db.blockchain().info().best_number);
+    }
+}
