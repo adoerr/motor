@@ -108,7 +108,7 @@ mod tests {
 
     use sc_client_api::Backend;
     use sp_blockchain::{Backend as ChainBackend, HeaderBackend};
-    use sp_runtime::generic::BlockId;
+    use sp_runtime::{generic::BlockId, ConsensusEngineId, Justification, Justifications};
 
     #[test]
     fn insert_headers() {
@@ -172,6 +172,31 @@ mod tests {
         assert_eq!(
             vec![b_0_1_1, b_0_2_1, b_0_2_2],
             backend.blockchain().leaves().unwrap()
+        );
+    }
+
+    #[test]
+    fn finalize_with_justification() {
+        const ENGINE_ID: ConsensusEngineId = *b"SMPL";
+
+        let backend = sc_client_db::Backend::<Block>::new_test(10, 10);
+
+        let b_0 = insert_header(&backend, 0, Default::default(), None, Default::default());
+        let b_1 = insert_header(&backend, 1, b_0, None, Default::default());
+
+        let j: Justification = (ENGINE_ID, vec![1, 2, 3]);
+
+        backend
+            .finalize_block(BlockId::Hash(b_1), Some(j.clone()))
+            .unwrap();
+
+        assert_eq!(
+            Justifications::from(j),
+            backend
+                .blockchain()
+                .justifications(BlockId::Hash(b_1))
+                .unwrap()
+                .unwrap()
         );
     }
 }
