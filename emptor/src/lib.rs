@@ -199,4 +199,48 @@ mod tests {
                 .unwrap()
         );
     }
+
+    #[test]
+    fn append_justifications() {
+        const CONS_ENGINE_0: ConsensusEngineId = *b"SMPL";
+        const CONS_ENGINE_1: ConsensusEngineId = *b"BEEF";
+
+        let backend = sc_client_db::Backend::<Block>::new_test(10, 10);
+
+        let b_0 = insert_header(&backend, 0, Default::default(), None, Default::default());
+        let b_1 = insert_header(&backend, 1, b_0, None, Default::default());
+
+        let j_0: Justification = (CONS_ENGINE_0, vec![1, 2, 3]);
+
+        backend
+            .finalize_block(BlockId::Hash(b_1), Some(j_0.clone()))
+            .unwrap();
+
+        let j_1: Justification = (CONS_ENGINE_1, vec![4, 5, 6]);
+
+        backend
+            .append_justification(BlockId::Hash(b_1), j_1.clone())
+            .unwrap();
+
+        let j_2: Justification = (CONS_ENGINE_1, vec![7, 8, 9]);
+
+        assert!(matches!(
+            backend.append_justification(BlockId::Hash(b_1), j_2),
+            Err(sp_blockchain::Error::BadJustification(_))
+        ));
+
+        let justifications = {
+            let mut j = Justifications::from(j_0);
+            j.append(j_1);
+            j
+        };
+
+        assert_eq!(
+            Some(justifications),
+            backend
+                .blockchain()
+                .justifications(BlockId::Hash(b_1))
+                .unwrap(),
+        );
+    }
 }
