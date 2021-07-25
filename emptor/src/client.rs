@@ -42,6 +42,29 @@ mod tests {
     }
 
     #[test]
+    fn import_blocks() {
+        sp_tracing::try_init_simple();
+
+        let mut client = new();
+
+        for _ in 0..10 {
+            let block = client
+                .new_block(Default::default())
+                .unwrap()
+                .build()
+                .unwrap()
+                .block;
+
+            executor::block_on(client.import(BlockOrigin::File, block)).unwrap();
+        }
+
+        let info = client.info();
+
+        assert_eq!(10, info.best_number);
+        assert_eq!(0, info.finalized_number);
+    }
+
+    #[test]
     fn import_finalized() {
         sp_tracing::try_init_simple();
 
