@@ -6,15 +6,25 @@ edition = "2018"
 
 [dependencies]
 sp-blockchain = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
+sp-consensus = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-core = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-database = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-runtime = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-state-machine = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
+sp-tracing = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 
+sc-block-builder = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sc-client-api = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sc-client-db = { git = "https://github.com/paritytech/substrate.git", branch = "master", features = ["test-helpers"] }
+sc-executor = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
+sc-service = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sc-state-db = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 
+substrate-test-client = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
+substrate-test-runtime-client = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
+substrate-test-runtime = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
+
+futures = { version = "0.3" }
 log = { version = "0.4" }
 
 [dev-dependencies]

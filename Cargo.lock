@@ -1343,15 +1343,24 @@ name = "emptor"
 version = "0.0.1"
 dependencies = [
  "env_logger 0.8.4",
+ "futures 0.3.16",
  "log",
+ "sc-block-builder",
  "sc-client-api",
  "sc-client-db",
+ "sc-executor",
+ "sc-service",
  "sc-state-db",
  "sp-blockchain",
+ "sp-consensus",
  "sp-core",
  "sp-database",
  "sp-runtime",
  "sp-state-machine",
+ "sp-tracing",
+ "substrate-test-client",
+ "substrate-test-runtime",
+ "substrate-test-runtime-client",
 ]
 
 [[package]]
