@@ -9,6 +9,8 @@ controlled update process of [Substrate](https://github.com/paritytech/substrate
 
 ## Engine Parts
 
+* [Emptor](./emptor) is a mock service client for testing purposes.
+
 * [Falso](./falso) is a mock network for testing purposes.
 
 * [Simplex](./simplex) is a minimal block authoring and finalization engine.

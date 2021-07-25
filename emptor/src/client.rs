@@ -1,5 +1,4 @@
-#[allow(unused_imports)]
-use substrate_test_runtime_client::{prelude::*, TestClient};
+use substrate_test_runtime_client::TestClient;
 
 pub type Client = TestClient;
 
@@ -16,10 +15,12 @@ mod tests {
     use sc_block_builder::BlockBuilderProvider;
     use sc_client_api::HeaderBackend;
 
+    use substrate_test_runtime_client::prelude::*;
+
     use futures::executor::{self};
 
     #[test]
-    fn import_block() {
+    fn import() {
         sp_tracing::try_init_simple();
 
         let mut client = new();
@@ -37,5 +38,26 @@ mod tests {
 
         assert_eq!(1, info.best_number);
         assert_eq!(0, info.finalized_number);
+    }
+
+    #[test]
+    fn import_finalized() {
+        sp_tracing::try_init_simple();
+
+        let mut client = new();
+
+        let block = client
+            .new_block(Default::default())
+            .unwrap()
+            .build()
+            .unwrap()
+            .block;
+
+        executor::block_on(client.import_as_final(BlockOrigin::File, block)).unwrap();
+
+        let info = client.info();
+
+        assert_eq!(1, info.best_number);
+        assert_eq!(1, info.finalized_number);
     }
 }
