@@ -16,6 +16,7 @@ sp-tracing = { git = "https://github.com/paritytech/substrate.git", branch = "ma
 sc-block-builder = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sc-client-api = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sc-client-db = { git = "https://github.com/paritytech/substrate.git", branch = "master", features = ["test-helpers"] }
+sc-consensus = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sc-executor = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sc-service = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sc-state-db = { git = "https://github.com/paritytech/substrate.git", branch = "master" }

@@ -1357,6 +1357,7 @@ dependencies = [
  "sc-block-builder",
  "sc-client-api",
  "sc-client-db",
+ "sc-consensus",
  "sc-executor",
  "sc-service",
  "sc-state-db",
