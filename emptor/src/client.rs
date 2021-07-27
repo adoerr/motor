@@ -74,8 +74,8 @@ impl Client {
         AnyBlockImport::new(self.clone())
     }
 
-    /// Return a clone of the inner full client
-    pub fn as_full(&self) -> Arc<TestClient> {
+    /// Return a clone of the inner test client
+    pub fn inner(&self) -> Arc<TestClient> {
         self.inner.clone()
     }
 

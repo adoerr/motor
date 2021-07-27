@@ -184,7 +184,7 @@ impl JustificationImport<runtime::Block> for Finalizer {
 }
 
 /// Verifier implementation for tracking failed verifications
-pub(crate) struct TrackingVerifier<B>
+pub struct TrackingVerifier<B>
 where
     B: Block,
 {
@@ -196,7 +196,7 @@ impl<B> TrackingVerifier<B>
 where
     B: Block,
 {
-    pub(crate) fn new(verifier: impl Verifier<B> + 'static) -> Self {
+    pub fn new(verifier: impl Verifier<B> + 'static) -> Self {
         TrackingVerifier {
             inner: Arc::new(AsyncMutex::new(Box::new(verifier))),
             failed: Default::default(),

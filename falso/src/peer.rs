@@ -28,14 +28,14 @@ use sp_runtime::{generic::BlockId, traits::Header};
 
 use substrate_test_runtime_client::{
     runtime::{Block, Hash},
-    Backend,
+    Backend, TestClient,
 };
+
+use emptor::{AnyBlockImport, Client, TrackingVerifier};
 
 use futures::Stream;
 use libp2p::PeerId;
 use log::trace;
-
-use crate::{client::FullClient, import::TrackingVerifier, AnyBlockImport, Client};
 
 type BoxStream<T> = Pin<Box<dyn Stream<Item = T> + Send>>;
 
@@ -121,9 +121,9 @@ where
         mut builder: F,
     ) -> H256
     where
-        F: FnMut(BlockBuilder<Block, FullClient, Backend>) -> Block,
+        F: FnMut(BlockBuilder<Block, TestClient, Backend>) -> Block,
     {
-        let client = self.client.as_full();
+        let client = self.client.inner();
 
         let mut best: H256 = [0u8; 32].into();
 

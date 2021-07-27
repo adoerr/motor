@@ -14,11 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-mod client;
-mod import;
 mod network;
 mod peer;
 
-pub use client::Client;
-pub use import::{AnyBlockImport, Finalizer, PassThroughVerifier};
 pub use peer::{Peer, PeerConfig};

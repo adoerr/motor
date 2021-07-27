@@ -20,9 +20,6 @@ use std::{
 };
 
 use sc_client_api::BlockchainEvents;
-use sc_client_db::{
-    Backend, DatabaseSettings, DatabaseSettingsSrc, KeepBlocks, PruningMode, TransactionStorageMode,
-};
 use sc_network::{
     block_request_handler::BlockRequestHandler,
     config::{
@@ -39,16 +36,15 @@ use sp_consensus::{
     import_queue::{BasicQueue, BoxJustificationImport, Verifier},
 };
 
-use substrate_test_runtime_client::{runtime::Block, TestClientBuilder, TestClientBuilderExt};
+use substrate_test_runtime_client::runtime::Block;
+
+use emptor::{AnyBlockImport, Client, Finalizer, PassThroughVerifier, TrackingVerifier};
 
 use futures::{prelude::*, FutureExt};
 use futures_core::future::BoxFuture;
 use log::trace;
 
-use crate::{
-    import::TrackingVerifier, AnyBlockImport, Client, Finalizer, PassThroughVerifier, Peer,
-    PeerConfig,
-};
+use crate::{Peer, PeerConfig};
 
 pub trait NetworkProvider {
     type Verifier: Verifier<Block> + Clone + 'static;
@@ -96,7 +92,7 @@ pub trait NetworkProvider {
     #[allow(dead_code)]
     /// Add a peer with `config` peer configuration
     fn add_peer(&mut self, config: PeerConfig) {
-        let client = client();
+        let client = Client::new();
 
         let (block_import, justification_import, link) = self.block_import(client.clone());
 
@@ -115,21 +111,21 @@ pub trait NetworkProvider {
 
         let block_request_protocol_config = {
             let (handler, protocol_config) =
-                BlockRequestHandler::new(&protocol_id, client.inner.clone(), 50);
+                BlockRequestHandler::new(&protocol_id, client.inner(), 50);
             self.spawn_task(handler.run().boxed());
             protocol_config
         };
 
         let state_request_protocol_config = {
             let (handler, protocol_config) =
-                StateRequestHandler::new(&protocol_id, client.inner.clone(), 50);
+                StateRequestHandler::new(&protocol_id, client.inner(), 50);
             self.spawn_task(handler.run().boxed());
             protocol_config
         };
 
         let light_client_request_protocol_config = {
             let (handler, protocol_config) =
-                LightClientRequestHandler::new(&protocol_id, client.inner.clone());
+                LightClientRequestHandler::new(&protocol_id, client.inner());
             self.spawn_task(handler.run().boxed());
             protocol_config
         };
@@ -147,7 +143,7 @@ pub trait NetworkProvider {
                 async_std::task::spawn(tsk);
             }),
             network_config: net_cfg.clone(),
-            chain: client.inner.clone(),
+            chain: client.inner(),
             on_demand: None,
             transaction_pool: Arc::new(EmptyTransactionPool),
             protocol_id,
@@ -168,10 +164,10 @@ pub trait NetworkProvider {
                 );
             }
 
-            let block_import_stream = Box::pin(client.inner.import_notification_stream().fuse());
+            let block_import_stream = Box::pin(client.inner().import_notification_stream().fuse());
 
             let finality_notification_stream =
-                Box::pin(client.inner.finality_notification_stream().fuse());
+                Box::pin(client.inner().finality_notification_stream().fuse());
 
             peers.push(Peer {
                 link,
@@ -281,37 +277,6 @@ pub trait NetworkProvider {
     /// Block until all peers finished syncing
     fn block_until_synced(&mut self) {
         futures::executor::block_on(futures::future::poll_fn::<(), _>(|cx| self.poll_synced(cx)))
-    }
-}
-
-// Return a mock network client for a new peer
-fn client() -> Client {
-    let db = kvdb_memorydb::create(12);
-    let db = sp_database::as_database(db);
-
-    let db_settings = DatabaseSettings {
-        state_cache_size: 16777216,
-        state_cache_child_ratio: Some((50, 100)),
-        state_pruning: PruningMode::default(),
-        source: DatabaseSettingsSrc::Custom(db),
-        keep_blocks: KeepBlocks::All,
-        transaction_storage: TransactionStorageMode::BlockBody,
-    };
-
-    let backend = Backend::new(db_settings, 0).expect("failed to create test backend");
-    let backend = Arc::new(backend);
-
-    let builder = TestClientBuilder::with_backend(backend);
-
-    let backend = builder.backend();
-
-    let (client, chain) = builder.build_with_longest_chain();
-    let inner = Arc::new(client);
-
-    Client {
-        inner,
-        backend,
-        chain,
     }
 }
 
