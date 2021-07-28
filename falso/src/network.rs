@@ -364,7 +364,7 @@ mod tests {
 
     #[test]
     fn new_network() {
-        let _ = env_logger::try_init();
+        sp_tracing::try_init_simple();
 
         let mut net = Network::new();
 
@@ -385,7 +385,7 @@ mod tests {
 
     #[test]
     fn connect_all_peers() {
-        let _ = env_logger::try_init();
+        sp_tracing::try_init_simple();
 
         let mut net = Network::new();
 

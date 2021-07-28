@@ -167,7 +167,7 @@ mod tests {
 
     #[test]
     fn add_single_block() {
-        let _ = env_logger::try_init();
+        sp_tracing::try_init_simple();
 
         let mut net = Network::new();
 
@@ -181,7 +181,7 @@ mod tests {
 
     #[test]
     fn add_multiple_blocks() {
-        let _ = env_logger::try_init();
+        sp_tracing::try_init_simple();
 
         let mut net = Network::new();
 

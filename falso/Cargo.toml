@@ -35,4 +35,4 @@ parking_lot = { version = "0.11" }
 rand = { version = "0.8" }
 
 [dev-dependencies]
-env_logger = { version = "0.8" }
+sp-tracing = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
