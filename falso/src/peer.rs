@@ -26,12 +26,7 @@ use sp_consensus::{BlockImport, BlockOrigin};
 use sp_core::H256;
 use sp_runtime::{generic::BlockId, traits::Header};
 
-use substrate_test_runtime_client::{
-    runtime::{Block, Hash},
-    Backend, ClientBlockImportExt, TestClient,
-};
-
-use emptor::{AnyBlockImport, Client, TrackingVerifier};
+use emptor::{prelude::*, AnyBlockImport, Client, TrackingVerifier};
 
 use futures::{
     executor::{self},
