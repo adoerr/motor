@@ -22,18 +22,21 @@ use sc_block_builder::{BlockBuilder, BlockBuilderProvider};
 use sc_client_api::{client::BlockImportNotification, FinalityNotification};
 use sc_consensus::LongestChain;
 use sc_network::{Multiaddr, NetworkWorker};
-use sp_consensus::{import_queue::Verifier, BlockImport, BlockOrigin};
+use sp_consensus::{BlockImport, BlockOrigin};
 use sp_core::H256;
 use sp_runtime::{generic::BlockId, traits::Header};
 
 use substrate_test_runtime_client::{
     runtime::{Block, Hash},
-    Backend, TestClient,
+    Backend, ClientBlockImportExt, TestClient,
 };
 
 use emptor::{AnyBlockImport, Client, TrackingVerifier};
 
-use futures::Stream;
+use futures::{
+    executor::{self},
+    Stream,
+};
 use libp2p::PeerId;
 use log::trace;
 
@@ -117,38 +120,30 @@ where
         &mut self,
         at: BlockId<Block>,
         count: usize,
-        origin: BlockOrigin,
-        mut builder: F,
+        _origin: BlockOrigin,
+        mut _builder: F,
     ) -> H256
     where
         F: FnMut(BlockBuilder<Block, TestClient, Backend>) -> Block,
     {
-        let client = self.client.inner();
+        let mut client = self.client.inner();
 
         let mut best: H256 = [0u8; 32].into();
 
         for _ in 0..count {
             let block = client
                 .new_block(Default::default())
-                .expect("new_block() failed");
+                .expect("failed create a new block")
+                .build()
+                .expect("failed to build block")
+                .block;
 
-            let block = builder(block);
             let hash = block.header.hash();
 
             trace!(target: "falso", "Block {} #{} parent: {}", hash, block.header.number, at);
 
-            let (block_import, cache) =
-                futures::executor::block_on(self.verifier.verify(origin, block.header, None, None))
-                    .expect("verify block failed");
-
-            let cache = if let Some(cache) = cache {
-                cache.into_iter().collect()
-            } else {
-                Default::default()
-            };
-
-            futures::executor::block_on(self.block_import.import_block(block_import, cache))
-                .expect("import block failed");
+            executor::block_on(client.import(BlockOrigin::File, block))
+                .expect("block import failed");
 
             self.network.service().announce_block(hash, None);
 
