@@ -5,6 +5,6 @@ panic = "unwind"
 members = [
     "emptor",
     "falso",
-    "simplex/node",
-    "simplex/runtime",
+    "simplex",
+    "simplex",
 ]

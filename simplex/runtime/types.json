@@ -1,5 +1,0 @@
-{
-    "Balance": "u128",
-    "Address": "MultiAddress",
-    "LookupSource": "MultiAddress"
-}
