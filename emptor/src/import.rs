@@ -19,14 +19,13 @@
 use std::collections::HashMap;
 
 use sc_client_api::backend::TransactionFor;
+use sc_consensus::{
+    block_import::JustificationImport, import_queue::Verifier, BlockCheckParams, BlockImport,
+    BlockImportParams, ForkChoiceStrategy, ImportResult,
+};
 use sc_service::Arc;
 use sp_blockchain::well_known_cache_keys;
-use sp_consensus::{
-    block_import::JustificationImport,
-    import_queue::{CacheKeyId, Verifier},
-    BlockCheckParams, BlockImport, BlockImportParams, BlockOrigin, ForkChoiceStrategy,
-    ImportResult,
-};
+use sp_consensus::{BlockOrigin, CacheKeyId};
 use sp_core::H256;
 use sp_runtime::{
     generic::{BlockId, OpaqueDigestItemId},
