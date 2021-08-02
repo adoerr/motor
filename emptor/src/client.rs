@@ -73,7 +73,7 @@ impl Client {
     }
 
     /// Return a clone of the inner [`substrate_test_runtime_client::TestClient`]
-    pub fn into_inner(&self) -> Arc<TestClient> {
+    pub fn as_inner(&self) -> Arc<TestClient> {
         self.inner.clone()
     }
 

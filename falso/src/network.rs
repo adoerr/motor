@@ -111,21 +111,21 @@ pub trait NetworkProvider {
 
         let block_request_protocol_config = {
             let (handler, protocol_config) =
-                BlockRequestHandler::new(&protocol_id, client.into_inner(), 50);
+                BlockRequestHandler::new(&protocol_id, client.as_inner(), 50);
             self.spawn_task(handler.run().boxed());
             protocol_config
         };
 
         let state_request_protocol_config = {
             let (handler, protocol_config) =
-                StateRequestHandler::new(&protocol_id, client.into_inner(), 50);
+                StateRequestHandler::new(&protocol_id, client.as_inner(), 50);
             self.spawn_task(handler.run().boxed());
             protocol_config
         };
 
         let light_client_request_protocol_config = {
             let (handler, protocol_config) =
-                LightClientRequestHandler::new(&protocol_id, client.into_inner());
+                LightClientRequestHandler::new(&protocol_id, client.as_inner());
             self.spawn_task(handler.run().boxed());
             protocol_config
         };
@@ -143,7 +143,7 @@ pub trait NetworkProvider {
                 async_std::task::spawn(tsk);
             }),
             network_config: net_cfg.clone(),
-            chain: client.into_inner(),
+            chain: client.as_inner(),
             on_demand: None,
             transaction_pool: Arc::new(EmptyTransactionPool),
             protocol_id,
@@ -165,10 +165,10 @@ pub trait NetworkProvider {
             }
 
             let block_import_stream =
-                Box::pin(client.into_inner().import_notification_stream().fuse());
+                Box::pin(client.as_inner().import_notification_stream().fuse());
 
             let finality_notification_stream =
-                Box::pin(client.into_inner().finality_notification_stream().fuse());
+                Box::pin(client.as_inner().finality_notification_stream().fuse());
 
             peers.push(Peer {
                 link,
