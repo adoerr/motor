@@ -25,12 +25,12 @@ use sc_consensus::{
 };
 use sc_service::Arc;
 use sp_blockchain::well_known_cache_keys;
-use sp_consensus::{BlockOrigin, CacheKeyId};
+use sp_consensus::CacheKeyId;
 use sp_core::H256;
 use sp_runtime::{
     generic::{BlockId, OpaqueDigestItemId},
     traits::{Block, Header, NumberFor},
-    Justification, Justifications,
+    Justification,
 };
 
 use substrate_test_runtime_client::{runtime, Backend};
@@ -138,23 +138,18 @@ where
 {
     async fn verify(
         &mut self,
-        origin: BlockOrigin,
-        header: B::Header,
-        justifications: Option<Justifications>,
-        body: Option<Vec<B::Extrinsic>>,
+        mut block: BlockImportParams<B, ()>,
     ) -> Result<(BlockImportParams<B, ()>, Option<Vec<(CacheKeyId, Vec<u8>)>>), String> {
-        let maybe_keys = header
+        let maybe_keys = block
+            .header
             .digest()
             .log(|l| l.try_as_raw(OpaqueDigestItemId::Consensus(b"smpl")))
             .map(|l| vec![(well_known_cache_keys::AUTHORITIES, l.to_vec())]);
 
-        let mut import = BlockImportParams::new(origin, header);
-        import.body = body;
-        import.finalized = self.finalized;
-        import.justifications = justifications;
-        import.fork_choice = Some(self.fork_choice);
+        block.finalized = self.finalized;
+        block.fork_choice = Some(self.fork_choice);
 
-        Ok((import, maybe_keys))
+        Ok((block, maybe_keys))
     }
 }
 
@@ -210,22 +205,14 @@ where
 {
     async fn verify(
         &mut self,
-        origin: BlockOrigin,
-        header: B::Header,
-        justifications: Option<Justifications>,
-        body: Option<Vec<B::Extrinsic>>,
+        block: BlockImportParams<B, ()>,
     ) -> Result<(BlockImportParams<B, ()>, Option<Vec<(CacheKeyId, Vec<u8>)>>), String> {
-        let hash = header.hash();
+        let hash = block.header.hash();
 
-        self.inner
-            .lock()
-            .await
-            .verify(origin, header, justifications, body)
-            .await
-            .map_err(|e| {
-                self.failed.lock().insert(hash, e.clone());
-                e
-            })
+        self.inner.lock().await.verify(block).await.map_err(|e| {
+            self.failed.lock().insert(hash, e.clone());
+            e
+        })
     }
 }
 
