@@ -14,10 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use sc_client_api::{Backend, BlockchainEvents, Finalizer};
+use std::sync::Arc;
+
+use sc_client_api::{Backend, BlockchainEvents, FinalityNotifications, Finalizer};
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_runtime::traits::Block;
+
+use futures::{FutureExt, StreamExt};
+use log::debug;
 
 pub trait Client<B, BE>:
     BlockchainEvents<B> + HeaderBackend<B> + Finalizer<B, BE> + ProvideRuntimeApi<B> + Send + Sync
@@ -40,4 +45,52 @@ where
         + Sync,
 {
     // empty
+}
+
+pub struct WorkerParams<BE, C> {
+    pub client: Arc<C>,
+    pub backend: Arc<BE>,
+}
+
+pub struct Worker<B, BE, C>
+where
+    B: Block,
+    BE: Backend<B>,
+    C: Client<B, BE>,
+{
+    client: Arc<C>,
+    backend: Arc<BE>,
+    finality_notifications: FinalityNotifications<B>,
+}
+
+impl<B, BE, C> Worker<B, BE, C>
+where
+    B: Block,
+    BE: Backend<B>,
+    C: Client<B, BE>,
+{
+    pub fn new(params: WorkerParams<BE, C>) -> Self {
+        let WorkerParams { client, backend } = params;
+
+        Worker {
+            client: client.clone(),
+            backend,
+            finality_notifications: client.finality_notification_stream(),
+        }
+    }
+
+    pub async fn run(&mut self) {
+        loop {
+            futures::select_biased! {
+                notification = self.finality_notifications.next().fuse() => {
+                    if let Some(notification) = notification {
+                        debug!(target: "vegan", "🥬 Finality notificaton: {:?}", notification);
+                    } else {
+                        debug!(target: "vegan", "🥬 Finality notification stream closed!");
+                        return;
+                    }
+                }
+            }
+        }
+    }
 }
