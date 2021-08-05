@@ -17,4 +17,5 @@
 mod network;
 mod peer;
 
+pub use network::{Network, NetworkProvider};
 pub use peer::{Peer, PeerConfig};
