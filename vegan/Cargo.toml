@@ -5,5 +5,10 @@ authors = ["Andreas Doerr"]
 edition = "2018"
 
 [dependencies]
+sp-api = { git = "https://github.com/paritytech/substrate", branch = "master" }
+sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "master" }
+sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "master" }
+
+sc-client-api = { git = "https://github.com/paritytech/substrate", branch = "master" }
 
 [dev-dependencies]
