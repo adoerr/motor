@@ -8,10 +8,15 @@ edition = "2018"
 sp-api = { git = "https://github.com/paritytech/substrate", branch = "master" }
 sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "master" }
 sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "master" }
+sp-tracing = { git = "https://github.com/paritytech/substrate", branch = "master" }
 
 sc-client-api = { git = "https://github.com/paritytech/substrate", branch = "master" }
 
 futures = "0.3"
 log = "0.4"
 
+emptor = { path = "../emptor" }
+falso = { path = "../falso" }
+
 [dev-dependencies]
+async-std = { version = "1.9" }
