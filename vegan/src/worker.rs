@@ -105,10 +105,10 @@ mod tests {
 
     use falso::{Network, NetworkProvider, PeerConfig};
 
-    use async_std::task;
+    use tokio::task;
 
-    #[test]
-    fn run_worker() {
+    #[tokio::test]
+    async fn run_worker() {
         sp_tracing::try_init_simple();
 
         let mut net = Network::new();

@@ -164,8 +164,8 @@ mod tests {
 
     use crate::network::{Network, NetworkProvider};
 
-    #[test]
-    fn add_single_block() {
+    #[tokio::test]
+    async fn add_single_block() {
         sp_tracing::try_init_simple();
 
         let mut net = Network::new();
@@ -178,8 +178,8 @@ mod tests {
         assert_eq!(1, best);
     }
 
-    #[test]
-    fn add_multiple_blocks() {
+    #[tokio::test]
+    async fn add_multiple_blocks() {
         sp_tracing::try_init_simple();
 
         let mut net = Network::new();

@@ -43,6 +43,7 @@ use emptor::{AnyBlockImport, Client, Finalizer, PassThroughVerifier, TrackingVer
 use futures::{prelude::*, FutureExt};
 use futures_core::future::BoxFuture;
 use log::trace;
+use tokio::task;
 
 use crate::{Peer, PeerConfig};
 
@@ -140,7 +141,7 @@ pub trait NetworkProvider {
             },
             executor: None,
             transactions_handler_executor: Box::new(|tsk| {
-                async_std::task::spawn(tsk);
+                task::spawn(tsk);
             }),
             network_config: net_cfg.clone(),
             chain: client.as_inner(),
@@ -187,7 +188,7 @@ pub trait NetworkProvider {
 
     /// Spawn background tasks
     fn spawn_task(&self, f: BoxFuture<'static, ()>) {
-        async_std::task::spawn(f);
+        task::spawn(f);
     }
 
     /// Poll the network. Polling will process all pending events
@@ -364,8 +365,8 @@ impl NetworkProvider for Network {
 mod tests {
     use super::{Network, NetworkProvider, PeerConfig};
 
-    #[test]
-    fn new_network() {
+    #[tokio::test]
+    async fn new_network() {
         sp_tracing::try_init_simple();
 
         let mut net = Network::new();
@@ -385,8 +386,8 @@ mod tests {
         assert_eq!(0, net.peer(1).connected_peers());
     }
 
-    #[test]
-    fn connect_all_peers() {
+    #[tokio::test]
+    async fn connect_all_peers() {
         sp_tracing::try_init_simple();
 
         let mut net = Network::new();
