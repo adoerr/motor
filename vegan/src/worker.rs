@@ -105,10 +105,10 @@ mod tests {
 
     use falso::{Network, NetworkProvider, PeerConfig};
 
-    use tokio::task;
+    use tokio::{task, time};
 
     #[tokio::test]
-    async fn run_worker() {
+    async fn idle_worker() {
         sp_tracing::try_init_simple();
 
         let mut net = Network::new();
@@ -122,13 +122,19 @@ mod tests {
             backend: peer.client().as_backend(),
         };
 
-        task::spawn(async {
+        let worker = task::spawn(async {
             let mut worker = Worker::new(params);
-            worker.run().await;
+            let _ = worker.run().await;
         });
 
         peer.add_blocks(5);
 
         net.block_until_synced();
+
+        // give the worker a chance to acutally run
+        time::sleep(time::Duration::from_millis(50)).await;
+
+        worker.abort();
+        assert!(worker.await.unwrap_err().is_cancelled());
     }
 }
