@@ -26,6 +26,10 @@ use sp_runtime::traits::Block;
 use futures::{FutureExt, StreamExt};
 use log::debug;
 
+#[cfg(test)]
+#[path = "worker_tests.rs"]
+mod tests;
+
 pub trait Client<B, BE>:
     BlockchainEvents<B> + HeaderBackend<B> + Finalizer<B, BE> + ProvideRuntimeApi<B> + Send + Sync
 where
@@ -96,45 +100,5 @@ where
                 }
             }
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{Worker, WorkerParams};
-
-    use falso::{Network, NetworkProvider, PeerConfig};
-
-    use tokio::{task, time};
-
-    #[tokio::test]
-    async fn idle_worker() {
-        sp_tracing::try_init_simple();
-
-        let mut net = Network::new();
-
-        net.add_peer(PeerConfig::default());
-
-        let peer = net.peer(0);
-
-        let params = WorkerParams {
-            client: peer.client().as_inner(),
-            backend: peer.client().as_backend(),
-        };
-
-        let worker = task::spawn(async {
-            let mut worker = Worker::new(params);
-            let _ = worker.run().await;
-        });
-
-        peer.add_blocks(5);
-
-        net.block_until_synced();
-
-        // give the worker a chance to acutally run
-        time::sleep(time::Duration::from_millis(50)).await;
-
-        worker.abort();
-        assert!(worker.await.unwrap_err().is_cancelled());
     }
 }

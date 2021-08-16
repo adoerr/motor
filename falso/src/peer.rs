@@ -136,7 +136,7 @@ where
 
             trace!(target: "falso", "Block {} #{} parent: {}", hash, block.header.number, at);
 
-            executor::block_on(client.import(BlockOrigin::File, block))
+            executor::block_on(client.import_as_final(BlockOrigin::NetworkBroadcast, block))
                 .expect("block import failed");
 
             self.network.service().announce_block(hash, None);
