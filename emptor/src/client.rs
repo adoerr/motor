@@ -126,9 +126,11 @@ mod tests {
     use sp_runtime::{ConsensusEngineId, Justification, Justifications};
 
     use sc_block_builder::BlockBuilderProvider;
-    use sc_client_api::HeaderBackend;
+    use sc_client_api::{BlockchainEvents, HeaderBackend};
 
     use substrate_test_runtime_client::prelude::*;
+
+    use futures::executor;
 
     #[tokio::test]
     async fn import() {
@@ -227,5 +229,34 @@ mod tests {
 
         assert_eq!(1, info.best_number);
         assert_eq!(1, info.finalized_number);
+    }
+
+    #[tokio::test]
+    async fn finality_notification() {
+        sp_tracing::try_init_simple();
+
+        let mut client = Client::new();
+
+        let mut finality_stream =
+            executor::block_on_stream(client.inner.finality_notification_stream());
+
+        let block = client
+            .inner
+            .new_block(Default::default())
+            .unwrap()
+            .build()
+            .unwrap()
+            .block;
+
+        let _ = client
+            .inner
+            .import_as_final(BlockOrigin::NetworkBroadcast, block)
+            .await;
+
+        let import_hash = client.info().best_hash;
+
+        let finality_hash = finality_stream.next().unwrap().hash;
+
+        assert_eq!(import_hash, finality_hash);
     }
 }
