@@ -64,7 +64,7 @@ pub trait NetworkProvider {
     /// Implement this function to return a block import verifier customized for your needs.
     fn verifier(
         &self,
-        client: Client,
+        client: Arc<Client>,
         config: &ProtocolConfig,
         link: &Self::Link,
     ) -> Self::Verifier;
@@ -72,7 +72,7 @@ pub trait NetworkProvider {
     /// Implement this function to return a block import implementation customized for your needs.
     fn block_import(
         &self,
-        client: Client,
+        client: Arc<Client>,
     ) -> (
         AnyBlockImport<Self::BlockImport>,
         Option<BoxJustificationImport<Block>>,
@@ -90,10 +90,9 @@ pub trait NetworkProvider {
     where
         M: FnOnce(&mut Vec<Peer<Self::Link, Self::BlockImport>>);
 
-    #[allow(dead_code)]
     /// Add a peer with `config` peer configuration
     fn add_peer(&mut self, config: PeerConfig) {
-        let client = Client::new();
+        let client = Arc::new(Client::new());
 
         let (block_import, justification_import, link) = self.block_import(client.clone());
 
@@ -323,7 +322,7 @@ impl NetworkProvider for Network {
 
     fn verifier(
         &self,
-        _client: Client,
+        _client: Arc<Client>,
         _config: &ProtocolConfig,
         _link: &Self::Link,
     ) -> Self::Verifier {
@@ -332,7 +331,7 @@ impl NetworkProvider for Network {
 
     fn block_import(
         &self,
-        client: Client,
+        client: Arc<Client>,
     ) -> (
         AnyBlockImport<Self::BlockImport>,
         Option<BoxJustificationImport<Block>>,
