@@ -18,7 +18,6 @@ use super::{Worker, WorkerParams};
 
 use falso::{Network, NetworkProvider, PeerConfig};
 
-use futures::{executor, future, task::Poll};
 use tokio::{task, time};
 
 #[tokio::test]
@@ -43,10 +42,7 @@ async fn idle_worker() {
 
     peer.add_blocks(5);
 
-    executor::block_on(future::poll_fn(move |cx| {
-        net.poll(cx);
-        Poll::Ready(())
-    }));
+    net.block_until_synced();
 
     // give the worker a chance to acutally run
     time::sleep(time::Duration::from_millis(50)).await;

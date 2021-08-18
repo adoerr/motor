@@ -86,6 +86,8 @@ where
     }
 
     pub async fn run(&mut self) {
+        #![allow(clippy::collapsible_match)]
+
         loop {
             debug!(target: "vegan", "🥬 Start Worker");
 
