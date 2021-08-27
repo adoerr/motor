@@ -10,7 +10,7 @@ pub mod prelude {
     pub use substrate_test_runtime_client::{
         runtime::{Block, Hash},
         Backend, BlockBuilderExt, ClientBlockImportExt, ClientExt, DefaultTestClientBuilderExt,
-        Executor, LocalExecutor, NativeExecutor, TestClient, TestClientBuilder,
-        TestClientBuilderExt, WasmExecutionMethod,
+        ExecutorDispatch, LocalExecutorDispatch, NativeElseWasmExecutor, TestClient,
+        TestClientBuilder, TestClientBuilderExt, WasmExecutionMethod,
     };
 }
