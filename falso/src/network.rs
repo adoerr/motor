@@ -47,6 +47,10 @@ use tracing::trace;
 
 use crate::{Peer, PeerConfig};
 
+#[cfg(test)]
+#[path = "network_tests.rs"]
+mod tests;
+
 pub trait NetworkProvider {
     type Verifier: Verifier<Block> + Clone + 'static;
 
@@ -357,50 +361,5 @@ impl NetworkProvider for Network {
         M: FnOnce(&mut Vec<Peer<Self::Link, Self::BlockImport>>),
     {
         mutator(&mut self.peers);
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{Network, NetworkProvider, PeerConfig};
-
-    #[tokio::test]
-    async fn new_network() {
-        sp_tracing::try_init_simple();
-
-        let mut net = Network::new();
-
-        assert_eq!(net.peers.len(), 0);
-
-        net.add_peer(PeerConfig::default());
-        net.add_peer(PeerConfig::default());
-
-        assert_eq!(net.peers.len(), 2);
-
-        let id1 = net.peer(0).id();
-        let id2 = net.peer(1).id();
-
-        assert_ne!(id1, id2);
-        assert_eq!(0, net.peer(0).connected_peers());
-        assert_eq!(0, net.peer(1).connected_peers());
-    }
-
-    #[tokio::test]
-    async fn connect_all_peers() {
-        sp_tracing::try_init_simple();
-
-        let mut net = Network::new();
-
-        for _ in 0..5 {
-            net.add_peer(PeerConfig::default());
-        }
-
-        assert!(net.peers().iter().all(|p| p.connected_peers() == 0));
-
-        net.block_until_connected();
-
-        let others = net.peers().len() - 1;
-
-        assert!(net.peers().iter().all(|p| p.connected_peers() == others));
     }
 }
