@@ -24,7 +24,7 @@ use sp_blockchain::HeaderBackend;
 use sp_runtime::traits::Block;
 
 use futures::{FutureExt, StreamExt};
-use log::debug;
+use tracing::{debug, instrument};
 
 #[cfg(test)]
 #[path = "worker_tests.rs"]
@@ -85,9 +85,8 @@ where
         }
     }
 
+    #[instrument(skip_all)]
     pub async fn run(&mut self) {
-        #![allow(clippy::collapsible_match)]
-
         loop {
             debug!(target: "vegan", "🥬 Start Worker");
 

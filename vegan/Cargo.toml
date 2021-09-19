@@ -13,7 +13,7 @@ sp-tracing = { git = "https://github.com/paritytech/substrate", branch = "master
 sc-client-api = { git = "https://github.com/paritytech/substrate", branch = "master" }
 
 futures = "0.3"
-log = "0.4"
+tracing = "0.1"
 
 emptor = { path = "../emptor" }
 falso = { path = "../falso" }
