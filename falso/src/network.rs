@@ -42,8 +42,8 @@ use emptor::{AnyBlockImport, Client, Finalizer, PassThroughVerifier, TrackingVer
 
 use futures::{prelude::*, FutureExt};
 use futures_core::future::BoxFuture;
-use log::trace;
 use tokio::task;
+use tracing::trace;
 
 use crate::{Peer, PeerConfig};
 

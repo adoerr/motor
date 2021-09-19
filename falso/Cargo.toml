@@ -27,10 +27,10 @@ emptor = { path = "../emptor" }
 async-trait = { version = "0.1" }
 futures = { version = "0.3" }
 futures-core = { version = "0.3" }
-log = { version = "0.4" }
 parking_lot = { version = "0.11" }
 rand = { version = "0.8" }
 tokio = { version = "1.9", features = ["full"] }
+tracing = { version = "0.1" }
 
 [dev-dependencies]
 sp-tracing = { git = "https://github.com/paritytech/substrate.git", branch = "master" }

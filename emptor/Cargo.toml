@@ -27,8 +27,8 @@ substrate-test-runtime = { git = "https://github.com/paritytech/substrate.git", 
 
 async-trait = { version = "0.1" }
 futures = { version = "0.3" }
-log = { version = "0.4" }
 parking_lot = { version = "0.11" }
+tracing = { version = "0.1" }
 
 [dev-dependencies]
 tokio = { version = "1.9", features = ["full"]}

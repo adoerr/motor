@@ -32,7 +32,7 @@ use futures::{
     executor::{self},
     Stream,
 };
-use log::trace;
+use tracing::trace;
 
 type BoxStream<T> = Pin<Box<dyn Stream<Item = T> + Send>>;
 
