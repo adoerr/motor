@@ -34,6 +34,10 @@ use futures::{
 };
 use tracing::trace;
 
+#[cfg(test)]
+#[path = "peer_tests.rs"]
+mod tests;
+
 type BoxStream<T> = Pin<Box<dyn Stream<Item = T> + Send>>;
 
 #[derive(Default, Clone)]
@@ -155,43 +159,5 @@ where
         );
 
         best
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::PeerConfig;
-
-    use crate::network::{Network, NetworkProvider};
-
-    #[tokio::test]
-    async fn add_single_block() {
-        sp_tracing::try_init_simple();
-
-        let mut net = Network::new();
-
-        net.add_peer(PeerConfig::default());
-        net.peer(0).add_block();
-
-        let best = net.peer(0).client().info().best_number;
-
-        assert_eq!(1, best);
-    }
-
-    #[tokio::test]
-    async fn add_multiple_blocks() {
-        sp_tracing::try_init_simple();
-
-        let mut net = Network::new();
-
-        net.add_peer(PeerConfig::default());
-
-        let hash = net.peer(0).add_blocks(5);
-
-        net.block_until_synced();
-
-        let best = net.peer(0).client().info().best_hash;
-
-        assert_eq!(hash, best);
     }
 }
