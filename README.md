@@ -9,6 +9,8 @@ controlled update process of [Substrate](https://github.com/paritytech/substrate
 
 ## Engine Parts
 
+* [Arber](./arber) is a Merkle-Mountain-Range pallet utilizing the [arber](https://github.com/adoerr/arber) library.
+
 * [Emptor](./emptor) is a mock service client for testing purposes.
 
 * [Falso](./falso) is a mock network for testing purposes.
