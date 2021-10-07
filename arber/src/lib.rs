@@ -16,10 +16,10 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+pub use pallet::*;
+
 #[cfg(test)]
 mod mock;
-
-pub use pallet::*;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -32,4 +32,11 @@ pub mod pallet {
 
     #[pallet::config]
     pub trait Config: frame_system::Config {}
+
+    #[pallet::hooks]
+    impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+        fn on_initialize(_block_number: T::BlockNumber) -> Weight {
+            100 as Weight
+        }
+    }
 }
