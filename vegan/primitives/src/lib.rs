@@ -16,6 +16,10 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+mod keyring;
+
+pub use keyring::Keyring;
+
 pub const KEY_TYPE: sp_application_crypto::KeyTypeId = sp_application_crypto::KeyTypeId(*b"vegn");
 
 pub mod crypto {
