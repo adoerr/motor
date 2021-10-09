@@ -8,4 +8,5 @@ members = [
     "falso",
     "simplex",
     "vegan",
+    "vegan/primitives",
 ]
