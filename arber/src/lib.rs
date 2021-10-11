@@ -16,6 +16,8 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+use codec::{Decode, Encode};
+
 pub use pallet::*;
 
 #[cfg(test)]
@@ -24,7 +26,7 @@ mod mock;
 mod tests;
 
 pub trait LeafProvider {
-    type Leaf;
+    type Leaf: Decode + Encode;
 
     fn leaf() -> Self::Leaf;
 }

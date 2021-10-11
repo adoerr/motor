@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
+use std::{cell::RefCell, thread_local};
+
 use sp_core::H256;
 use sp_runtime::{
     testing::Header,
@@ -72,3 +74,20 @@ impl frame_system::Config for MockRuntime {
 }
 
 impl Config for MockRuntime {}
+
+thread_local! {
+    pub static HEADER: RefCell<Leaf> = RefCell::new(Default::default());
+}
+
+#[derive(Encode, Decode, Clone, Debug, Default)]
+pub struct Leaf {
+    pub header: Option<Header>,
+}
+
+impl LeafProvider for Leaf {
+    type Leaf = Self;
+
+    fn leaf() -> Self::Leaf {
+        HEADER.with(|hdr| hdr.borrow().clone())
+    }
+}
