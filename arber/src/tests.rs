@@ -14,31 +14,21 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-#![cfg_attr(not(feature = "std"), no_std)]
+use sp_core::offchain::{testing::TestOffchainExt, OffchainDbExt, OffchainWorkerExt};
+use sp_io::TestExternalities;
 
-pub use pallet::*;
+use crate::mock::MockRuntime;
 
-#[cfg(test)]
-mod mock;
-#[cfg(test)]
-mod tests;
+fn new_test_ext() -> TestExternalities {
+    frame_system::GenesisConfig::default()
+        .build_storage::<MockRuntime>()
+        .unwrap()
+        .into()
+}
 
-#[frame_support::pallet]
-pub mod pallet {
-    use frame_support::pallet_prelude::*;
-    use frame_system::pallet_prelude::*;
+fn register_offchain_ext(ext: &mut TestExternalities) {
+    let (off_ext, _) = TestOffchainExt::with_offchain_db(ext.offchain_db());
 
-    #[pallet::pallet]
-    #[pallet::generate_store(pub(super) trait Store)]
-    pub struct Pallet<T>(_);
-
-    #[pallet::config]
-    pub trait Config: frame_system::Config {}
-
-    #[pallet::hooks]
-    impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-        fn on_initialize(_block_number: T::BlockNumber) -> Weight {
-            100 as Weight
-        }
-    }
+    ext.register_extension(OffchainDbExt::new(off_ext.clone()));
+    ext.register_extension(OffchainWorkerExt::new(off_ext));
 }

@@ -27,11 +27,11 @@ use codec::{Decode, Encode};
 use crate as pallet_arber;
 use crate::*;
 
-type Block = frame_system::mocking::MockBlock<Test>;
-type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
+type Block = frame_system::mocking::MockBlock<MockRuntime>;
+type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<MockRuntime>;
 
 frame_support::construct_runtime!(
-    pub enum Test where
+    pub enum MockRuntime where
     Block = Block,
     NodeBlock = Block,
     UncheckedExtrinsic = UncheckedExtrinsic,
@@ -45,7 +45,7 @@ parameter_types! {
     pub const BlockHashCount: u64 = 250;
 }
 
-impl frame_system::Config for Test {
+impl frame_system::Config for MockRuntime {
     type BaseCallFilter = frame_support::traits::Everything;
     type Origin = Origin;
     type Call = Call;
@@ -71,4 +71,4 @@ impl frame_system::Config for Test {
     type OnSetCode = ();
 }
 
-impl Config for Test {}
+impl Config for MockRuntime {}
