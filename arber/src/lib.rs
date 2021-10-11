@@ -23,6 +23,20 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+pub trait LeafProvider {
+    type Leaf;
+
+    fn leaf() -> Self::Leaf;
+}
+
+impl LeafProvider for () {
+    type Leaf = ();
+
+    fn leaf() -> Self::Leaf {
+        ()
+    }
+}
+
 #[frame_support::pallet]
 pub mod pallet {
     use frame_support::pallet_prelude::*;
