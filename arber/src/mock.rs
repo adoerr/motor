@@ -19,7 +19,7 @@ use std::{cell::RefCell, thread_local};
 use sp_core::H256;
 use sp_runtime::{
     testing::Header,
-    traits::{BlakeTwo256, IdentityLookup, Keccak256},
+    traits::{BlakeTwo256, IdentityLookup},
 };
 
 use frame_support::parameter_types;
@@ -73,7 +73,9 @@ impl frame_system::Config for MockRuntime {
     type OnSetCode = ();
 }
 
-impl Config for MockRuntime {}
+impl Config for MockRuntime {
+    type Hash = H256;
+}
 
 thread_local! {
     pub static LEAF: RefCell<Leaf> = RefCell::new(Leaf::new(0));

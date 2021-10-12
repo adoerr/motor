@@ -15,6 +15,7 @@ scale-info = { version = "1.0", default-features = false, features = ["derive"] 
 sp-core = { git = "https://github.com/paritytech/substrate.git", default-features = false, branch = "master" }
 sp-io = { git = "https://github.com/paritytech/substrate.git", default-features = false, branch = "master" }
 sp-runtime = { git = "https://github.com/paritytech/substrate.git", default-features = false, branch = "master" }
+sp-std = { git = "https://github.com/paritytech/substrate.git", default-features = false, branch = "master" }
 sp-tracing = { git = "https://github.com/paritytech/substrate.git", default-features = false, branch = "master" }
 
 frame-support = { git = "https://github.com/paritytech/substrate.git", default-features = false, branch = "master" }

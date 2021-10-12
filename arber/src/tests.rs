@@ -29,6 +29,7 @@ fn new_test_ext() -> TestExternalities {
         .into()
 }
 
+#[allow(dead_code)]
 fn register_offchain_ext(ext: &mut TestExternalities) {
     let (off_ext, _) = TestOffchainExt::with_offchain_db(ext.offchain_db());
 

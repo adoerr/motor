@@ -34,9 +34,7 @@ pub trait LeafProvider {
 impl LeafProvider for () {
     type Leaf = ();
 
-    fn leaf() -> Self::Leaf {
-        ()
-    }
+    fn leaf() -> Self::Leaf {}
 }
 
 #[frame_support::pallet]
@@ -49,14 +47,28 @@ pub mod pallet {
     pub struct Pallet<T>(_);
 
     #[pallet::config]
-    pub trait Config: frame_system::Config {}
+    pub trait Config: frame_system::Config {
+        type Hash: sp_std::hash::Hash
+            + sp_std::fmt::Display
+            + Default
+            + Decode
+            + Encode
+            + scale_info::TypeInfo
+            + codec::EncodeLike;
+    }
+
+    #[pallet::storage]
+    #[pallet::getter(fn root)]
+    pub type Root<T> = StorageValue<_, (<T as Config>::Hash, u64), ValueQuery>;
 
     #[pallet::hooks]
     impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
         fn on_initialize(block_number: T::BlockNumber) -> Weight {
-            sp_tracing::debug!(target: "arber", "⛰ block_number: {}", block_number);
+            let (hash, size) = Self::root();
 
-            100 as Weight
+            sp_tracing::debug!(target: "arber", "⛰ block_number: {} - root: {} - size: {}", block_number, hash, size);
+
+            100_u64
         }
     }
 }
