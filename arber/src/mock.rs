@@ -76,18 +76,26 @@ impl frame_system::Config for MockRuntime {
 impl Config for MockRuntime {}
 
 thread_local! {
-    pub static HEADER: RefCell<Leaf> = RefCell::new(Default::default());
+    pub static LEAF: RefCell<Leaf> = RefCell::new(Leaf::new(0));
 }
 
-#[derive(Encode, Decode, Clone, Debug, Default)]
+#[derive(Encode, Decode, Clone, Debug)]
 pub struct Leaf {
-    pub header: Option<Header>,
+    pub header: Header,
+}
+
+impl Leaf {
+    pub fn new(num: u64) -> Self {
+        Leaf {
+            header: Header::new_from_number(num),
+        }
+    }
 }
 
 impl LeafProvider for Leaf {
     type Leaf = Self;
 
     fn leaf() -> Self::Leaf {
-        HEADER.with(|hdr| hdr.borrow().clone())
+        LEAF.with(|hdr| hdr.borrow().clone())
     }
 }

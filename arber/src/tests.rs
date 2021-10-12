@@ -16,8 +16,11 @@
 
 use sp_core::offchain::{testing::TestOffchainExt, OffchainDbExt, OffchainWorkerExt};
 use sp_io::TestExternalities;
+use sp_runtime::testing::Header;
 
-use crate::mock::MockRuntime;
+use frame_support::{dispatch::Weight, traits::OnInitialize};
+
+use crate::mock::{Arber, MockRuntime, LEAF};
 
 fn new_test_ext() -> TestExternalities {
     frame_system::GenesisConfig::default()
@@ -31,4 +34,29 @@ fn register_offchain_ext(ext: &mut TestExternalities) {
 
     ext.register_extension(OffchainDbExt::new(off_ext.clone()));
     ext.register_extension(OffchainWorkerExt::new(off_ext));
+}
+
+fn next_block() -> Weight {
+    let number = frame_system::Pallet::<MockRuntime>::block_number() + 1;
+    let parent_hash = LEAF.with(|l| l.borrow().header.hash());
+
+    LEAF.with(|l| l.borrow_mut().header = Header::new_from_number(number));
+
+    frame_system::Pallet::<MockRuntime>::initialize(
+        &number,
+        &parent_hash,
+        &Default::default(),
+        frame_system::InitKind::Full,
+    );
+
+    Arber::on_initialize(number)
+}
+
+#[test]
+fn next_block_works() {
+    let mut ext = new_test_ext();
+
+    ext.execute_with(|| {
+        assert_eq!(100, next_block());
+    });
 }
