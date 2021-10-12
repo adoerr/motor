@@ -53,7 +53,9 @@ pub mod pallet {
 
     #[pallet::hooks]
     impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-        fn on_initialize(_block_number: T::BlockNumber) -> Weight {
+        fn on_initialize(block_number: T::BlockNumber) -> Weight {
+            sp_tracing::debug!(target: "arber", "⛰ block_number: {}", block_number);
+
             100 as Weight
         }
     }

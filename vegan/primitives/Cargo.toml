@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2018"
 authors = ["Andreas Doerr"]
 
+[lib]
+doctest = false
+
 [dependencies]
 codec = { version = "2.2.0", package = "parity-scale-codec", default-features = false, features = ["derive"] }
 scale-info = { version = "1.0", default-features = false, features = ["derive"] }

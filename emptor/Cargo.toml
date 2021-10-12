@@ -4,6 +4,9 @@ version = "0.0.1"
 authors = ["Andreas Doerr"]
 edition = "2018"
 
+[lib]
+doctest = false
+
 [dependencies]
 sp-blockchain = { git = "https://github.com/paritytech/substrate.git", branch = "master" }
 sp-consensus = { git = "https://github.com/paritytech/substrate.git", branch = "master" }

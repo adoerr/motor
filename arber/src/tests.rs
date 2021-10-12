@@ -54,6 +54,8 @@ fn next_block() -> Weight {
 
 #[test]
 fn next_block_works() {
+    sp_tracing::try_init_simple();
+
     let mut ext = new_test_ext();
 
     ext.execute_with(|| {
