@@ -77,3 +77,16 @@ fn initialize_root_works() {
         assert_eq!(0, size);
     });
 }
+
+#[test]
+fn single_block_works() {
+    sp_tracing::try_init_simple();
+
+    let mut ext = new_test_ext();
+
+    ext.execute_with(|| {
+        let weight = next_block();
+
+        assert_eq!(100, weight);
+    })
+}

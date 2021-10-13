@@ -107,6 +107,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "arber"
+version = "0.1.0-dev"
+source = "git+https://github.com/adoerr/arber.git?branch=main#dedb012dfb475ec9d268889a0f052d19f5696fb6"
+dependencies = [
+ "blake2",
+ "displaydoc",
+ "parity-scale-codec",
+]
+
+[[package]]
 name = "arrayref"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -995,6 +1005,17 @@ dependencies = [
  "libc",
  "redox_users",
  "winapi 0.3.9",
+]
+
+[[package]]
+name = "displaydoc"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3bf95dc3f046b9da4f2d51833c0d3547d8564ef6910f5c1ed130306a75b92886"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -3301,6 +3322,7 @@ dependencies = [
 name = "pallet-arber"
 version = "0.1.0"
 dependencies = [
+ "arber",
  "frame-support",
  "frame-system",
  "parity-scale-codec",

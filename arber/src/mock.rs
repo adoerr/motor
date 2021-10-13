@@ -74,27 +74,29 @@ impl frame_system::Config for MockRuntime {
 }
 
 impl Config for MockRuntime {
+    const KEY_PREFIX: &'static [u8] = b"arber-";
     type Hash = H256;
+    type Leaf = <MockLeaf as LeafProvider>::Leaf;
 }
 
 thread_local! {
-    pub static LEAF: RefCell<Leaf> = RefCell::new(Leaf::new(0));
+    pub static LEAF: RefCell<MockLeaf> = RefCell::new(MockLeaf::new(0));
 }
 
 #[derive(Encode, Decode, Clone, Debug)]
-pub struct Leaf {
+pub struct MockLeaf {
     pub header: Header,
 }
 
-impl Leaf {
+impl MockLeaf {
     pub fn new(num: u64) -> Self {
-        Leaf {
+        MockLeaf {
             header: Header::new_from_number(num),
         }
     }
 }
 
-impl LeafProvider for Leaf {
+impl LeafProvider for MockLeaf {
     type Leaf = Self;
 
     fn leaf() -> Self::Leaf {

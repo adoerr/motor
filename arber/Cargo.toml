@@ -21,11 +21,14 @@ sp-tracing = { git = "https://github.com/paritytech/substrate.git", default-feat
 frame-support = { git = "https://github.com/paritytech/substrate.git", default-features = false, branch = "master" }
 frame-system = { git = "https://github.com/paritytech/substrate.git", default-features = false, branch = "master" }
 
+arber = { git = "https://github.com/adoerr/arber.git", default-features = false, branch = "main" }
+
 [dev-dependencies]
 
 [features]
 default = ["std"]
 std = [
+    "arber/std",
     "codec/std",
     "scale-info/std",
     "sp-io/std",

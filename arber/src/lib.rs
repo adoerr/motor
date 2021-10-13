@@ -16,9 +16,13 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+use sp_std::vec::Vec;
+
 use codec::{Decode, Encode};
 
 pub use pallet::*;
+
+mod mmr;
 
 #[cfg(test)]
 mod mock;
@@ -48,6 +52,10 @@ pub mod pallet {
 
     #[pallet::config]
     pub trait Config: frame_system::Config {
+        /// Prefix wich will be prepended to each offchain DB key.
+        const KEY_PREFIX: &'static [u8];
+
+        /// Hashing result type
         type Hash: sp_std::hash::Hash
             + sp_std::fmt::Display
             + Default
@@ -55,6 +63,9 @@ pub mod pallet {
             + Encode
             + scale_info::TypeInfo
             + codec::EncodeLike;
+
+        /// MMR leaf type
+        type Leaf: Decode + Encode;
     }
 
     #[pallet::storage]
@@ -66,9 +77,16 @@ pub mod pallet {
         fn on_initialize(block_number: T::BlockNumber) -> Weight {
             let (hash, size) = Self::root();
 
-            sp_tracing::debug!(target: "arber", "⛰ block_number: {} - root: {} - size: {}", block_number, hash, size);
+            sp_tracing::debug!(target: "arber", "⛰️ block_number: {} - root: {} - size: {}", block_number, hash, size);
 
             100_u64
         }
+    }
+}
+
+impl<T: Config> Pallet<T> {
+    // Map a MMR Store index to an offchain DB key
+    fn storage_key(idx: u64) -> Vec<u8> {
+        (T::KEY_PREFIX, idx).encode()
     }
 }
