@@ -14,7 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use sp_core::offchain::{testing::TestOffchainExt, OffchainDbExt, OffchainWorkerExt};
+use sp_core::{
+    offchain::{testing::TestOffchainExt, OffchainDbExt, OffchainWorkerExt},
+    H256,
+};
 use sp_io::TestExternalities;
 use sp_runtime::testing::Header;
 
@@ -37,6 +40,7 @@ fn register_offchain_ext(ext: &mut TestExternalities) {
     ext.register_extension(OffchainWorkerExt::new(off_ext));
 }
 
+#[allow(dead_code)]
 fn next_block() -> Weight {
     let number = frame_system::Pallet::<MockRuntime>::block_number() + 1;
     let parent_hash = LEAF.with(|l| l.borrow().header.hash());
@@ -53,13 +57,23 @@ fn next_block() -> Weight {
     Arber::on_initialize(number)
 }
 
+fn hex(s: &str) -> H256 {
+    s.parse().unwrap()
+}
+
 #[test]
-fn next_block_works() {
+fn initialize_root_works() {
     sp_tracing::try_init_simple();
 
     let mut ext = new_test_ext();
 
     ext.execute_with(|| {
-        assert_eq!(100, next_block());
+        let (hash, size) = crate::Root::<MockRuntime>::get();
+
+        assert_eq!(
+            hex("0x0000000000000000000000000000000000000000000000000000000000000000"),
+            hash
+        );
+        assert_eq!(0, size);
     });
 }
