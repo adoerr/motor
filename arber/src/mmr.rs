@@ -18,7 +18,7 @@ use sp_core::offchain::StorageKind;
 use sp_io::offchain::local_storage_get;
 use sp_std::marker::PhantomData;
 
-use arber::{Error, Store};
+use arber::{Error, MutableStore};
 use codec::{Decode, Encode};
 
 use crate::{Config, Pallet};
@@ -26,7 +26,7 @@ use crate::{Config, Pallet};
 #[derive(Default)]
 pub struct Storage<T, L>(PhantomData<(T, L)>);
 
-impl<T, L> Store<L> for Storage<T, L>
+impl<T, L> MutableStore<L> for Storage<T, L>
 where
     T: Config,
     L: Clone + Decode + Encode,
