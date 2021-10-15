@@ -19,18 +19,19 @@ use sp_io::offchain::local_storage_get;
 use sp_std::marker::PhantomData;
 
 use arber::{Error, Store};
-use codec::Decode;
+use codec::{Decode, Encode};
 
 use crate::{Config, Pallet};
 
 #[derive(Default)]
-pub struct Storage<T>(PhantomData<T>);
+pub struct Storage<T, L>(PhantomData<(T, L)>);
 
-impl<T> Store<Vec<u8>> for Storage<T>
+impl<T, L> Store<L> for Storage<T, L>
 where
     T: Config,
+    L: Clone + Decode + Encode,
 {
-    fn append(&mut self, _elem: &Vec<u8>, _hashes: &[arber::Hash]) -> arber::Result<()> {
+    fn append(&mut self, _elem: &L, _hashes: &[arber::Hash]) -> arber::Result<()> {
         todo!()
     }
 
