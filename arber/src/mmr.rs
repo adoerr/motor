@@ -18,7 +18,7 @@ use sp_core::offchain::StorageKind;
 use sp_io::offchain::local_storage_get;
 use sp_std::marker::PhantomData;
 
-use arber::{Error, MutableStore};
+use arber::{Error, Store};
 use codec::{Decode, Encode};
 
 use crate::{Config, Pallet};
@@ -26,15 +26,11 @@ use crate::{Config, Pallet};
 #[derive(Default)]
 pub struct Storage<T, L>(PhantomData<(T, L)>);
 
-impl<T, L> MutableStore<L> for Storage<T, L>
+impl<T, L> Store<L> for Storage<T, L>
 where
     T: Config,
     L: Clone + Decode + Encode,
 {
-    fn append(&mut self, _elem: &L, _hashes: &[arber::Hash]) -> arber::Result<()> {
-        todo!()
-    }
-
     fn hash_at(&self, idx: u64) -> arber::Result<arber::Hash> {
         let key = Pallet::<T>::storage_key(idx);
 
@@ -46,4 +42,16 @@ where
 
         Ok(hash)
     }
+}
+
+#[allow(dead_code, clippy::upper_case_acronyms)]
+pub struct MMR<T, L, S>
+where
+    T: Config,
+    L: Clone + Decode + Encode,
+    S: Store<L>,
+{
+    _config: PhantomData<T>,
+    _leaf: PhantomData<L>,
+    _store: PhantomData<S>,
 }
