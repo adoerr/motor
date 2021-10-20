@@ -18,7 +18,7 @@ use sp_core::offchain::StorageKind;
 use sp_io::offchain::local_storage_get;
 use sp_std::marker::PhantomData;
 
-use arber::{Error, Store};
+use arber::{Error, MerkleMountainRange, Store};
 use codec::{Decode, Encode};
 
 use crate::{Config, Pallet};
@@ -42,6 +42,10 @@ where
 
         Ok(hash)
     }
+
+    fn append(&mut self, _elem: &L, _hashes: &[arber::Hash]) -> arber::Result<()> {
+        todo!()
+    }
 }
 
 #[allow(dead_code, clippy::upper_case_acronyms)]
@@ -51,7 +55,7 @@ where
     L: Clone + Decode + Encode,
     S: Store<L>,
 {
+    mmr: MerkleMountainRange<L, S>,
+    size: u64,
     _config: PhantomData<T>,
-    _leaf: PhantomData<L>,
-    _store: PhantomData<S>,
 }
