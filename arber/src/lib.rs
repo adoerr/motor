@@ -43,6 +43,7 @@ impl LeafProvider for () {
 
 #[frame_support::pallet]
 pub mod pallet {
+    use codec::EncodeLike;
     use frame_support::pallet_prelude::*;
     use frame_system::pallet_prelude::*;
 
@@ -61,8 +62,8 @@ pub mod pallet {
             + Default
             + Decode
             + Encode
-            + scale_info::TypeInfo
-            + codec::EncodeLike;
+            + EncodeLike
+            + scale_info::TypeInfo;
 
         /// MMR leaf type
         type Leaf: Decode + Encode;

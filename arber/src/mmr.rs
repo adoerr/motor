@@ -21,7 +21,7 @@ use sp_std::marker::PhantomData;
 use arber::{Error, MerkleMountainRange, Store};
 use codec::{Decode, Encode};
 
-use crate::{Config, Pallet};
+use crate::{Config, Pallet, Root};
 
 #[derive(Default)]
 pub struct Storage<T, L>(PhantomData<(T, L)>);
@@ -43,8 +43,16 @@ where
         Ok(hash)
     }
 
-    fn append(&mut self, _elem: &L, _hashes: &[arber::Hash]) -> arber::Result<()> {
-        todo!()
+    fn append(&mut self, _elem: &L, hashes: &[arber::Hash]) -> arber::Result<()> {
+        let (_, mut size) = Pallet::<T>::root();
+
+        for h in hashes {
+            let key = Pallet::<T>::storage_key(size);
+            sp_io::offchain_index::set(&key, h.as_ref());
+            size += 1;
+        }
+
+        Ok(())
     }
 }
 
@@ -58,4 +66,22 @@ where
     mmr: MerkleMountainRange<L, S>,
     size: u64,
     _config: PhantomData<T>,
+}
+
+impl<T, L, S> MMR<T, L, S>
+where
+    T: Config,
+    L: Clone + Decode + Encode,
+    S: Store<L>,
+{
+    pub fn append(&mut self, elem: &L) -> arber::Result<u64> {
+        let size = self.mmr.append(elem)?;
+
+        let root = self.mmr.root()?;
+
+        // FIXME
+        //Root::<T>::put((root.as_ref(), size));
+
+        Ok(size)
+    }
 }

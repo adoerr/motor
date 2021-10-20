@@ -109,7 +109,7 @@ dependencies = [
 [[package]]
 name = "arber"
 version = "0.1.0-dev"
-source = "git+https://github.com/adoerr/arber.git?branch=main#37bfe8f103dc155bce57ef5ec0131a4688f89652"
+source = "git+https://github.com/adoerr/arber.git?branch=main#85280eb8f0cd1027305d5951929059a76c477574"
 dependencies = [
  "blake2",
  "displaydoc",
