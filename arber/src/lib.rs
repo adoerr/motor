@@ -16,8 +16,6 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use sp_std::vec::Vec;
-
 use codec::{Decode, Encode};
 
 pub use pallet::*;
@@ -43,7 +41,7 @@ impl LeafProvider for () {
 
 #[frame_support::pallet]
 pub mod pallet {
-    use codec::EncodeLike;
+    use super::*;
     use frame_support::pallet_prelude::*;
     use frame_system::pallet_prelude::*;
 
@@ -56,29 +54,20 @@ pub mod pallet {
         /// Prefix wich will be prepended to each offchain DB key.
         const KEY_PREFIX: &'static [u8];
 
-        /// Hashing result type
-        type Hash: sp_std::hash::Hash
-            + sp_std::fmt::Display
-            + Default
-            + Decode
-            + Encode
-            + EncodeLike
-            + scale_info::TypeInfo;
-
         /// MMR leaf type
         type Leaf: Decode + Encode;
     }
 
     #[pallet::storage]
     #[pallet::getter(fn root)]
-    pub type Root<T> = StorageValue<_, (<T as Config>::Hash, u64), ValueQuery>;
+    pub type Root<T> = StorageValue<_, (arber::Hash, u64), ValueQuery>;
 
     #[pallet::hooks]
     impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
         fn on_initialize(block_number: T::BlockNumber) -> Weight {
             let (hash, size) = Self::root();
 
-            sp_tracing::debug!(target: "arber", "⛰️ block_number: {} - root: {} - size: {}", block_number, hash, size);
+            sp_tracing::debug!(target: "arber", "⛰️ block_number: {} - root: {:?} - size: {}", block_number, hash, size);
 
             100_u64
         }

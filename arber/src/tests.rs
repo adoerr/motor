@@ -14,10 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use sp_core::{
-    offchain::{testing::TestOffchainExt, OffchainDbExt, OffchainWorkerExt},
-    H256,
-};
+use sp_core::offchain::{testing::TestOffchainExt, OffchainDbExt, OffchainWorkerExt};
 use sp_io::TestExternalities;
 use sp_runtime::testing::Header;
 
@@ -57,10 +54,6 @@ fn next_block() -> Weight {
     Arber::on_initialize(number)
 }
 
-fn hex(s: &str) -> H256 {
-    s.parse().unwrap()
-}
-
 #[test]
 fn initialize_root_works() {
     sp_tracing::try_init_simple();
@@ -70,10 +63,7 @@ fn initialize_root_works() {
     ext.execute_with(|| {
         let (hash, size) = crate::Root::<MockRuntime>::get();
 
-        assert_eq!(
-            hex("0x0000000000000000000000000000000000000000000000000000000000000000"),
-            hash
-        );
+        assert_eq!("000000000000".to_string(), format!("{}", hash));
         assert_eq!(0, size);
     });
 }

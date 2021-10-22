@@ -75,7 +75,6 @@ impl frame_system::Config for MockRuntime {
 
 impl Config for MockRuntime {
     const KEY_PREFIX: &'static [u8] = b"arber-";
-    type Hash = H256;
     type Leaf = <MockLeaf as LeafProvider>::Leaf;
 }
 

@@ -74,13 +74,14 @@ where
     L: Clone + Decode + Encode,
     S: Store<L>,
 {
+    #[allow(dead_code)]
     pub fn append(&mut self, elem: &L) -> arber::Result<u64> {
-        let size = self.mmr.append(elem)?;
+        let _ = self.mmr.append(elem)?;
 
         let root = self.mmr.root()?;
+        let size = self.mmr.size();
 
-        // FIXME
-        //Root::<T>::put((root.as_ref(), size));
+        Root::<T>::put((root, size));
 
         Ok(size)
     }
