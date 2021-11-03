@@ -41,6 +41,7 @@ impl LeafProvider for () {
 
 type Leaf<T> = <<T as Config>::Leaf as LeafProvider>::Leaf;
 
+#[allow(clippy::upper_case_acronyms)]
 type MMR<T> = mmr::MMR<T, Leaf<T>, mmr::Storage<T, Leaf<T>>>;
 
 #[frame_support::pallet]
