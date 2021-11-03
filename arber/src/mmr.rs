@@ -23,8 +23,13 @@ use codec::{Decode, Encode};
 
 use crate::{Config, Pallet, Root};
 
-#[derive(Default)]
 pub struct Storage<T, L>(PhantomData<(T, L)>);
+
+impl<T, L> Default for Storage<T, L> {
+    fn default() -> Self {
+        Self(Default::default())
+    }
+}
 
 impl<T, L> Store<L> for Storage<T, L>
 where
@@ -72,9 +77,16 @@ impl<T, L, S> MMR<T, L, S>
 where
     T: Config,
     L: Clone + Decode + Encode,
-    S: Store<L>,
+    S: Store<L> + Default,
 {
-    #[allow(dead_code)]
+    pub fn new(size: u64) -> Self {
+        Self {
+            mmr: MerkleMountainRange::new(size, Default::default()),
+            size,
+            _config: PhantomData,
+        }
+    }
+
     pub fn append(&mut self, elem: &L) -> arber::Result<u64> {
         let _ = self.mmr.append(elem)?;
 

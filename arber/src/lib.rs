@@ -28,7 +28,7 @@ mod mock;
 mod tests;
 
 pub trait LeafProvider {
-    type Leaf: Decode + Encode;
+    type Leaf: Clone + Decode + Encode;
 
     fn leaf() -> Self::Leaf;
 }
@@ -38,6 +38,10 @@ impl LeafProvider for () {
 
     fn leaf() -> Self::Leaf {}
 }
+
+type Leaf<T> = <<T as Config>::Leaf as LeafProvider>::Leaf;
+
+type MMR<T> = mmr::MMR<T, Leaf<T>, mmr::Storage<T, Leaf<T>>>;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -55,7 +59,7 @@ pub mod pallet {
         const KEY_PREFIX: &'static [u8];
 
         /// MMR leaf type
-        type Leaf: Decode + Encode;
+        type Leaf: LeafProvider;
     }
 
     #[pallet::storage]
@@ -68,6 +72,12 @@ pub mod pallet {
             let (hash, size) = Self::root();
 
             sp_tracing::debug!(target: "arber", "⛰️ block_number: {} - root: {:?} - size: {}", block_number, hash, size);
+
+            let data = T::Leaf::leaf();
+
+            let mut mmr: MMR<T> = mmr::MMR::new(size);
+
+            let _ = mmr.append(&data).expect("MMR append never fails");
 
             100_u64
         }

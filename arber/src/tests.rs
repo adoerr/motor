@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use sp_core::offchain::{testing::TestOffchainExt, OffchainDbExt, OffchainWorkerExt};
+use sp_core::offchain::{testing::TestOffchainExt, OffchainDbExt};
 use sp_io::TestExternalities;
 use sp_runtime::testing::Header;
 
@@ -34,7 +34,6 @@ fn register_offchain_ext(ext: &mut TestExternalities) {
     let (off_ext, _) = TestOffchainExt::with_offchain_db(ext.offchain_db());
 
     ext.register_extension(OffchainDbExt::new(off_ext.clone()));
-    ext.register_extension(OffchainWorkerExt::new(off_ext));
 }
 
 #[allow(dead_code)]
@@ -73,6 +72,8 @@ fn single_block_works() {
     sp_tracing::try_init_simple();
 
     let mut ext = new_test_ext();
+
+    register_offchain_ext(&mut ext);
 
     ext.execute_with(|| {
         let weight = next_block();
