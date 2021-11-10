@@ -14,20 +14,41 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use sp_core::offchain::StorageKind;
-use sp_io::offchain::local_storage_get;
-use sp_std::marker::PhantomData;
+#![allow(dead_code)]
+
+use sp_std::{collections::btree_map::BTreeMap, marker::PhantomData};
 
 use arber::{Error, MerkleMountainRange, Store};
 use codec::{Decode, Encode};
 
 use crate::{Config, Pallet, Root};
 
-pub struct Storage<T, L>(PhantomData<(T, L)>);
+pub struct Storage<T, L> {
+    peaks_cache: BTreeMap<u64, arber::Hash>,
+    _marker: PhantomData<(T, L)>,
+}
 
 impl<T, L> Default for Storage<T, L> {
     fn default() -> Self {
-        Self(Default::default())
+        Storage {
+            peaks_cache: Default::default(),
+            _marker: Default::default(),
+        }
+    }
+}
+
+impl<T, L> Storage<T, L> {
+    pub fn new(peaks: Vec<(u64, arber::Hash)>) -> Self {
+        let mut peaks_cache = BTreeMap::new();
+
+        for p in peaks {
+            peaks_cache.insert(p.0, p.1);
+        }
+
+        Self {
+            peaks_cache,
+            ..Default::default()
+        }
     }
 }
 
@@ -37,15 +58,12 @@ where
     L: Clone + Decode + Encode,
 {
     fn hash_at(&self, idx: u64) -> arber::Result<arber::Hash> {
-        let key = Pallet::<T>::storage_key(idx);
+        let hash = self
+            .peaks_cache
+            .get(&idx)
+            .ok_or(Error::MissingHashAtIndex(idx))?;
 
-        let hash =
-            local_storage_get(StorageKind::LOCAL, &key).ok_or(Error::MissingHashAtIndex(idx))?;
-
-        let hash: arber::Hash =
-            Decode::decode(&mut hash.as_ref()).map_err(|_| Error::MissingHashAtIndex(idx))?;
-
-        Ok(hash)
+        Ok(*hash)
     }
 
     fn append(&mut self, _elem: &L, hashes: &[arber::Hash]) -> arber::Result<()> {
@@ -79,9 +97,9 @@ where
     L: Clone + Decode + Encode,
     S: Store<L> + Default,
 {
-    pub fn new(size: u64) -> Self {
+    pub fn new(size: u64, store: S) -> Self {
         Self {
-            mmr: MerkleMountainRange::new(size, Default::default()),
+            mmr: MerkleMountainRange::new(size, store),
             size,
             _config: PhantomData,
         }

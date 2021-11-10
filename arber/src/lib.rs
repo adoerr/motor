@@ -76,7 +76,7 @@ pub mod pallet {
 
             let data = T::Leaf::leaf();
 
-            let mut mmr: MMR<T> = mmr::MMR::new(size);
+            let mut mmr: MMR<T> = mmr::MMR::new(size, Default::default());
 
             let _ = mmr.append(&data).expect("MMR append never fails");
 
