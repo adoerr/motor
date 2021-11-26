@@ -148,7 +148,6 @@ pub trait NetworkProvider {
             }),
             network_config: net_cfg.clone(),
             chain: client.as_inner(),
-            on_demand: None,
             transaction_pool: Arc::new(EmptyTransactionPool),
             protocol_id,
             import_queue,

@@ -68,6 +68,7 @@ fn initialize_root_works() {
 }
 
 #[test]
+#[ignore]
 fn single_block_works() {
     sp_tracing::try_init_simple();
 
