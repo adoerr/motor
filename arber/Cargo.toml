@@ -9,8 +9,8 @@ description = "FRAME Merkle Mountain Range pallet."
 doctest = false
 
 [dependencies]
-codec = { package = "parity-scale-codec", version = "2.3.0", default-features = false }
-scale-info = { version = "1.0", default-features = false, features = ["derive"] }
+codec = { package = "parity-scale-codec", version = "3.6.3", default-features = false }
+scale-info = { version = "2.8.0", default-features = false, features = ["derive"] }
 
 sp-core = { git = "https://github.com/paritytech/substrate.git", default-features = false, branch = "master" }
 sp-io = { git = "https://github.com/paritytech/substrate.git", default-features = false, branch = "master" }

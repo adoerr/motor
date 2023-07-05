@@ -15,11 +15,11 @@ sp-tracing = { git = "https://github.com/paritytech/substrate", branch = "master
 
 sc-client-api = { git = "https://github.com/paritytech/substrate", branch = "master" }
 
-futures = "0.3"
-tracing = "0.1"
+futures = "0.3.28"
+tracing = "0.1.37"
 
 emptor = { path = "../emptor" }
 falso = { path = "../falso" }
 
 [dev-dependencies]
-tokio = { version = "1.9", features = ["full"] }
+tokio = { version = "1.29.1", features = ["full"] }

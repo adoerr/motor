@@ -11,3 +11,6 @@
 
 # Ignore VSCode sutff
 .vscode
+
+# Ignore IntelliJ stuff
+.idea
