@@ -14,11 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{Worker, WorkerParams};
-
 use falso::{Network, NetworkProvider, PeerConfig};
-
 use tokio::{task, time};
+
+use super::{Worker, WorkerParams};
 
 #[tokio::test]
 async fn idle_worker() {

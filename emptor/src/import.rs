@@ -18,25 +18,21 @@
 
 use std::collections::HashMap;
 
+use futures::lock::Mutex as AsyncMutex;
+use parking_lot::Mutex;
 use sc_client_api::backend::TransactionFor;
 use sc_consensus::{
     block_import::JustificationImport, import_queue::Verifier, BlockCheckParams, BlockImport,
     BlockImportParams, ForkChoiceStrategy, ImportResult,
 };
 use sc_service::Arc;
-use sp_blockchain::well_known_cache_keys;
-use sp_consensus::CacheKeyId;
 use sp_core::H256;
 use sp_runtime::{
-    generic::{BlockId, OpaqueDigestItemId},
+    generic::BlockId,
     traits::{Block, Header, NumberFor},
     Justification,
 };
-
 use substrate_test_runtime_client::{runtime, Backend};
-
-use futures::lock::Mutex as AsyncMutex;
-use parking_lot::Mutex;
 
 use crate::Client;
 
@@ -98,10 +94,9 @@ where
     async fn import_block(
         &mut self,
         block: BlockImportParams<runtime::Block, Self::Transaction>,
-        cache: HashMap<CacheKeyId, Vec<u8>>,
     ) -> Result<ImportResult, Self::Error> {
         self.inner
-            .import_block(block.clear_storage_changes_and_mutate(), cache)
+            .import_block(block.clear_storage_changes_and_mutate())
             .await
     }
 }
@@ -139,17 +134,11 @@ where
     async fn verify(
         &mut self,
         mut block: BlockImportParams<B, ()>,
-    ) -> Result<(BlockImportParams<B, ()>, Option<Vec<(CacheKeyId, Vec<u8>)>>), String> {
-        let maybe_keys = block
-            .header
-            .digest()
-            .log(|l| l.try_as_raw(OpaqueDigestItemId::Consensus(b"smpl")))
-            .map(|l| vec![(well_known_cache_keys::AUTHORITIES, l.to_vec())]);
-
+    ) -> Result<BlockImportParams<B, ()>, String> {
         block.finalized = self.finalized;
         block.fork_choice = Some(self.fork_choice);
 
-        Ok((block, maybe_keys))
+        Ok(BlockImportParams::new(block.origin, block.header))
     }
 }
 
@@ -206,7 +195,7 @@ where
     async fn verify(
         &mut self,
         block: BlockImportParams<B, ()>,
-    ) -> Result<(BlockImportParams<B, ()>, Option<Vec<(CacheKeyId, Vec<u8>)>>), String> {
+    ) -> Result<BlockImportParams<B, ()>, String> {
         let hash = block.header.hash();
 
         self.inner.lock().await.verify(block).await.map_err(|e| {

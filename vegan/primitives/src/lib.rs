@@ -23,6 +23,8 @@ pub use keyring::Keyring;
 pub const KEY_TYPE: sp_application_crypto::KeyTypeId = sp_application_crypto::KeyTypeId(*b"vegn");
 
 pub mod crypto {
+    use std::convert::TryFrom;
+
     use sp_application_crypto::{app_crypto, ecdsa};
 
     app_crypto!(ecdsa, crate::KEY_TYPE);

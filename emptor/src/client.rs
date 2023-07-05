@@ -14,14 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
-use sc_client_api::backend::Finalizer;
+use sc_client_api::{backend::Finalizer, BlockBackend};
 use sc_consensus::{BlockCheckParams, BlockImport, BlockImportParams, ImportResult, LongestChain};
 use sp_blockchain::Info;
-use sp_consensus::CacheKeyId;
 use sp_runtime::{generic::BlockId, Justification};
-
 use substrate_test_runtime::Block;
 use substrate_test_runtime_client::{Backend, TestClient, TestClientBuilder, TestClientBuilderExt};
 
@@ -68,7 +66,17 @@ impl Client {
         justification: Option<Justification>,
         notify: bool,
     ) -> sp_blockchain::Result<()> {
-        self.inner.finalize_block(id, justification, notify)
+        let hash = match id {
+            BlockId::Hash(hash) => hash,
+            BlockId::Number(number) => {
+                let hash = self.inner.block_hash(number)?;
+                if hash.is_none() {
+                    return Err(sp_blockchain::Error::Backend("Block not found".into()));
+                }
+                hash.unwrap()
+            }
+        };
+        self.inner.finalize_block(hash, justification, notify)
     }
 
     /// Return a clone of the client as [`crate::AnyBlockImport`]
@@ -114,10 +122,9 @@ impl BlockImport<Block> for Client {
     async fn import_block(
         &mut self,
         block: BlockImportParams<Block, Self::Transaction>,
-        cache: HashMap<CacheKeyId, Vec<u8>>,
     ) -> Result<ImportResult, Self::Error> {
         self.inner
-            .import_block(block.clear_storage_changes_and_mutate(), cache)
+            .import_block(block.clear_storage_changes_and_mutate())
             .await
     }
 }

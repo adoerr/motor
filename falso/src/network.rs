@@ -19,29 +19,23 @@ use std::{
     task::{Context, Poll},
 };
 
+use emptor::{AnyBlockImport, Client, Finalizer, PassThroughVerifier, TrackingVerifier};
+use futures::{prelude::*, FutureExt};
+use futures_core::future::BoxFuture;
 use sc_client_api::BlockchainEvents;
 use sc_consensus::{
     block_import::BlockImport,
-    import_queue::{BasicQueue, BoxJustificationImport, Verifier},
+    import_queue::{BoxJustificationImport, Verifier},
 };
 use sc_network::{
-    block_request_handler::BlockRequestHandler,
     config::{
-        build_multiaddr, EmptyTransactionPool, NetworkConfiguration, NonDefaultSetConfig,
-        ProtocolConfig, ProtocolId, Role, SetConfig, SyncMode, TransportConfig,
+        build_multiaddr, NetworkConfiguration, NonDefaultSetConfig, ProtocolId, Role, SetConfig,
+        SyncMode, TransportConfig,
     },
-    light_client_requests::handler::LightClientRequestHandler,
-    state_request_handler::StateRequestHandler,
+    request_responses::ProtocolConfig,
     NetworkWorker,
 };
-use sp_consensus::block_validation::DefaultBlockAnnounceValidator;
-
 use substrate_test_runtime_client::runtime::Block;
-
-use emptor::{AnyBlockImport, Client, Finalizer, PassThroughVerifier, TrackingVerifier};
-
-use futures::{prelude::*, FutureExt};
-use futures_core::future::BoxFuture;
 use tokio::task;
 use tracing::trace;
 
@@ -100,41 +94,27 @@ pub trait NetworkProvider {
 
         let (block_import, justification_import, link) = self.block_import(client.clone());
 
-        let verifier = self.verifier(client.clone(), &Default::default(), &link);
-        let verifier = TrackingVerifier::new(verifier);
+        let config = ProtocolConfig {
+            name: From::from("falso-protocol-name"),
+            fallback_names: vec![],
+            max_request_size: 0,
+            max_response_size: 0,
+            request_timeout: Default::default(),
+            inbound_queue: Default::default(),
+        };
 
-        let import_queue = Box::new(BasicQueue::new(
-            verifier.clone(),
-            Box::new(block_import.clone()),
-            justification_import,
-            &sp_core::testing::TaskExecutor::new(),
-            None,
-        ));
+        let verifier = self.verifier(client.clone(), &config, &link);
+        let verifier = TrackingVerifier::new(verifier);
 
         let protocol_id = ProtocolId::from("falso-protocol-name");
 
-        let block_request_protocol_config = {
-            let (handler, protocol_config) =
-                BlockRequestHandler::new(&protocol_id, client.as_inner(), 50);
-            self.spawn_task(handler.run().boxed());
-            protocol_config
+        // new PeerConfig() sets is_authority to false
+        let peer_config = PeerConfig {
+            is_authority: config.is_authority,
+            ..Default::default()
         };
 
-        let state_request_protocol_config = {
-            let (handler, protocol_config) =
-                StateRequestHandler::new(&protocol_id, client.as_inner(), 50);
-            self.spawn_task(handler.run().boxed());
-            protocol_config
-        };
-
-        let light_client_request_protocol_config = {
-            let (handler, protocol_config) =
-                LightClientRequestHandler::new(&protocol_id, client.as_inner());
-            self.spawn_task(handler.run().boxed());
-            protocol_config
-        };
-
-        let net_cfg = network_config(config.clone());
+        let net_cfg = network_config(peer_config);
 
         let network = NetworkWorker::new(sc_network::config::Params {
             role: if config.is_authority {
@@ -143,20 +123,14 @@ pub trait NetworkProvider {
                 Role::Full
             },
             executor: None,
-            transactions_handler_executor: Box::new(|tsk| {
-                task::spawn(tsk);
-            }),
             network_config: net_cfg.clone(),
-            chain: client.as_inner(),
-            transaction_pool: Arc::new(EmptyTransactionPool),
             protocol_id,
-            import_queue,
-            block_announce_validator: Box::new(DefaultBlockAnnounceValidator),
+            genesis_hash: (),
+            fork_id: None,
             metrics_registry: None,
-            block_request_protocol_config,
-            state_request_protocol_config,
-            light_client_request_protocol_config,
-            warp_sync: None,
+            block_announce_config: NonDefaultSetConfig {},
+            tx: (),
+            inbound_queue: None,
         })
         .unwrap();
 

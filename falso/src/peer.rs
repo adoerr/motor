@@ -18,6 +18,11 @@
 
 use std::{borrow::Cow, pin::Pin, sync::Arc};
 
+use emptor::{prelude::*, AnyBlockImport, Client, TrackingVerifier};
+use futures::{
+    executor::{self},
+    Stream,
+};
 use sc_block_builder::{BlockBuilder, BlockBuilderProvider};
 use sc_client_api::{client::BlockImportNotification, FinalityNotification};
 use sc_consensus::{BlockImport, LongestChain};
@@ -25,13 +30,6 @@ use sc_network::{Multiaddr, NetworkWorker, PeerId};
 use sp_consensus::BlockOrigin;
 use sp_core::H256;
 use sp_runtime::{generic::BlockId, traits::Header};
-
-use emptor::{prelude::*, AnyBlockImport, Client, TrackingVerifier};
-
-use futures::{
-    executor::{self},
-    Stream,
-};
 use tracing::trace;
 
 #[cfg(test)]

@@ -228,17 +228,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "arber"
-version = "0.2.0"
-source = "git+https://github.com/adoerr/arber.git?branch=main#d2a29161c13dcc87eac07f3f44135c9839fbd5b8"
-dependencies = [
- "blake2",
- "displaydoc",
- "parity-scale-codec",
- "scale-info",
-]
-
-[[package]]
 name = "arc-swap"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4289,22 +4278,6 @@ checksum = "a1914cd452d8fccd6f9db48147b29fd4ae05bea9dc5d9ad578509f72415de282"
 dependencies = [
  "cfg-if",
  "libm",
-]
-
-[[package]]
-name = "pallet-arber"
-version = "0.1.0"
-dependencies = [
- "arber",
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "sp-tracing",
 ]
 
 [[package]]

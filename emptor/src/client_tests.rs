@@ -14,20 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::Client;
-
+use futures::executor;
+use sc_block_builder::BlockBuilderProvider;
+use sc_client_api::{BlockchainEvents, HeaderBackend};
 use sp_consensus::BlockOrigin;
 use sp_runtime::{
     generic::{Digest, DigestItem},
     ConsensusEngineId, Justification, Justifications,
 };
-
-use sc_block_builder::BlockBuilderProvider;
-use sc_client_api::{BlockchainEvents, HeaderBackend};
-
 use substrate_test_runtime_client::prelude::*;
 
-use futures::executor;
+use super::Client;
 
 const ENGINE_ID: ConsensusEngineId = *b"SMPL";
 

@@ -17,9 +17,8 @@
 #![allow(dead_code)]
 
 use sc_client_api::{Backend, BlockImportOperation, NewBlockState};
-use sp_core::H256;
+use sp_core::{storage::StateVersion, H256};
 use sp_runtime::{
-    generic::BlockId,
     testing::{Digest, ExtrinsicWrapper, Header},
     traits::{BlakeTwo256, Hash},
 };
@@ -63,25 +62,19 @@ pub fn insert_block(
     let header = Header {
         parent_hash,
         number,
-        state_root: BlakeTwo256::trie_root(Vec::new()),
+        state_root: BlakeTwo256::trie_root(Vec::new(), StateVersion::default()),
         extrinsics_root,
         digest,
     };
 
     let hash = header.hash();
 
-    let block_id = if number == 0 {
-        BlockId::Hash(Default::default())
-    } else {
-        BlockId::Number(number - 1)
-    };
-
     let mut op = backend
         .begin_operation()
         .expect("begin block insert operation failed");
 
     backend
-        .begin_state_operation(&mut op, block_id)
+        .begin_state_operation(&mut op, hash)
         .expect("note state transition failed");
 
     op.set_block_data(header, Some(body), None, None, NewBlockState::Best)

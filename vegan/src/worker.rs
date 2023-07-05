@@ -18,12 +18,11 @@
 
 use std::sync::Arc;
 
+use futures::{FutureExt, StreamExt};
 use sc_client_api::{Backend, BlockchainEvents, FinalityNotifications, Finalizer};
 use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_runtime::traits::Block;
-
-use futures::{FutureExt, StreamExt};
 use tracing::{debug, instrument};
 
 #[cfg(test)]

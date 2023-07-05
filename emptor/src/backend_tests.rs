@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-use super::{insert_header, Block};
-
 use sc_client_api::Backend;
 use sp_blockchain::{Backend as ChainBackend, HeaderBackend};
 use sp_runtime::{generic::BlockId, ConsensusEngineId, Justification, Justifications};
+
+use super::{insert_header, Block};
 
 #[test]
 fn insert_headers() {
